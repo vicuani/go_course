@@ -55,7 +55,7 @@ type animal struct {
 	Cage    *cage
 }
 
-func NewAnimal(id int, species animalSpecies, c *cage) *animal {
+func newAnimal(id int, species animalSpecies, c *cage) *animal {
 	return &animal{
 		Id: id,
 		Species: species,
@@ -110,7 +110,7 @@ func main() {
 	var animals []*animal
 	for i := 0; i < animal_count; i++ {
 		sp := animalSpecies(rand.IntN(int(AnimalCount)))
-		animals = append(animals, NewAnimal(i + 1, sp, &c))
+		animals = append(animals, newAnimal(i + 1, sp, &c))
 	}
 	c.animals = animals
 	fmt.Printf("After creation cage contains %v animals\n\n", len(c.animals))
