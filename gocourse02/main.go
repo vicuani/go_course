@@ -80,23 +80,6 @@ type cage struct {
 	animals []*animal
 }
 
-// func (c* cage) free_animals() {
-// 	for _, animal := range c.animals {
-// 		animal.Cage = nil
-// 	}
-
-// 	c.animals = []*animal{}
-// }
-
-// func (c* cage) remove(an *animal) {
-// 	if an.Cage == nil {
-// 		fmt.Printf("This animal (id = %v) is already free\n", an.Id)
-// 		return
-// 	}
-
-// 	an.Cage = nil
-// }
-
 func (c* cage) put(an *animal) {
 	if an.Cage != nil {
 		fmt.Printf("This animal (id = %v) is already in cage\n", an.Id)
