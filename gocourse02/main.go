@@ -19,23 +19,23 @@ import (
 type zookeeper struct {
 }
 
-func (zookeeper) put_to_cage(c *cage, an *animal) {
+func (zookeeper) putToCage(c *cage, an *animal) {
 	c.put(an)
 }
 
 // Animal
 
-type animal_species int16
+type animalSpecies int
 
 const (
-	Lion animal_species = iota
+	Lion animalSpecies = iota
 	Tiger
 	Wolf
 	Fox
-	MaxVirtualAnimal
+	AnimalCount	//	virtual element used to determine 'enum' size
 )
 
-func (animal_species) to_string(sp animal_species) string {
+func (sp animalSpecies) String() string {
 	switch sp {
 	case Lion:
 		return "Lion"
@@ -51,11 +51,19 @@ func (animal_species) to_string(sp animal_species) string {
 
 type animal struct {
 	Id      int
-	Species animal_species
+	Species animalSpecies
 	Cage    *cage
 }
 
-func (animal) copy(other *animal, new_id int) *animal {
+func NewAnimal(id int, species animalSpecies, c *cage) *animal {
+	return &animal{
+		Id: id,
+		Species: species,
+		Cage: c,
+	}
+}
+
+func (*animal) reproduce(other *animal, new_id int) *animal {
 	return &animal{
 		Id:      new_id,
 		Species: other.Species,
@@ -63,18 +71,31 @@ func (animal) copy(other *animal, new_id int) *animal {
 	}
 }
 
+func (an *animal) excape() {
+	an.Cage = nil
+}
+
 // Cage
 type cage struct {
 	animals []*animal
 }
 
-func (c* cage) free_animals() {
-	for _, animal := range c.animals {
-		animal.Cage = nil
-	}
+// func (c* cage) free_animals() {
+// 	for _, animal := range c.animals {
+// 		animal.Cage = nil
+// 	}
 
-	c.animals = []*animal{}
-}
+// 	c.animals = []*animal{}
+// }
+
+// func (c* cage) remove(an *animal) {
+// 	if an.Cage == nil {
+// 		fmt.Printf("This animal (id = %v) is already free\n", an.Id)
+// 		return
+// 	}
+
+// 	an.Cage = nil
+// }
 
 func (c* cage) put(an *animal) {
 	if an.Cage != nil {
@@ -87,14 +108,14 @@ func (c* cage) put(an *animal) {
 }
 
 // main
-func multiply_animal(animals *[]*animal, an *animal) {
-	new_an := an.copy(an, len(*animals)+1)
+func reproduceAnimal(animals *[]*animal, an *animal) {
+	new_an := an.reproduce(an, len(*animals)+1)
 	*animals = append(*animals, new_an)
 }
 
-func print_animals(animals []*animal) {
+func printAnimals(animals []*animal) {
 	for _, animal := range animals {
-		fmt.Printf("Animal #%v, species: %v, has cage = %v\n", animal.Id, animal.Species.to_string(animal.Species), animal.Cage != nil)
+		fmt.Printf("Animal #%v, species: %v, has cage = %v\n", animal.Id, animal.Species, animal.Cage != nil)
 	}
 }
 
@@ -105,24 +126,21 @@ func main() {
 	animal_count := rand.IntN(5) + 3
 	var animals []*animal
 	for i := 0; i < animal_count; i++ {
-		sp := animal_species(rand.IntN(int(MaxVirtualAnimal)))
-		current_an := animal{
-			Id:      i + 1,
-			Species: sp,
-			Cage:    &c,
-		}
-
-		animals = append(animals, &current_an)
+		sp := animalSpecies(rand.IntN(int(AnimalCount)))
+		animals = append(animals, NewAnimal(i + 1, sp, &c))
 	}
 	c.animals = animals
 	fmt.Printf("After creation cage contains %v animals\n\n", len(c.animals))
 
-	c.free_animals()
+	for _, animal := range(c.animals) {
+		animal.excape()
+	}
+	c.animals = nil
 
 	fmt.Printf("During freedom cage contains %v animals\n\n", len(c.animals))
 
 	fmt.Println("Free animals:")
-	print_animals(animals)
+	printAnimals(animals)
 
 	//	Multiply animals randomly, using len(animals) - to multiply only 'known' animals, multiplied will be added to the end of animals
 	free_animal_count := len(animals)
@@ -130,17 +148,17 @@ func main() {
 		r := rand.IntN(10)
 		if r < 3 {
 			fmt.Printf("Lucky day for animal with id = %v\n", animals[i].Id)
-			multiply_animal(&animals, animals[i])
+			reproduceAnimal(&animals, animals[i])
 		}
 	}
 
 	keeper := zookeeper{}
 	fmt.Println("\nPut all animals to the cage")
 	for _, animal := range animals {
-		keeper.put_to_cage(&c, animal)
+		keeper.putToCage(&c, animal)
 	}
 
 	//	Print all animals again
 	fmt.Println("\nFinally, animals are:")
-	print_animals(animals)
+	printAnimals(animals)
 }
