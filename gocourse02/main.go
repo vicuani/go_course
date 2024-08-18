@@ -1,6 +1,8 @@
 package main
 
 import (
+	"GoCourse/go_course/gocourse02/animal"
+	"GoCourse/go_course/gocourse02/cage"
 	"fmt"
 	"math/rand/v2"
 )
@@ -8,140 +10,109 @@ import (
 /*
 
 Написати програму “Зоопарк”. Звіри повтікали (більше трьох штук), наглядач повинен їх зібрати.
-Кожна сутність (наглядач, звір, клітка, …) представляється окремою структурою (zookeeper, animal, cage, …).
-Треба використати щонайменше: структури, вказівник, nil, будування, конструктор.
+Кожна сутність (наглядач, звір, клітка, …) представляється окремою структурою (zookeeper, Animal, Cage, …).
+Треба використати щонайменше: структури, вказівник, nil, вбудовування (embedding), конструктор.
 Додати тваринам можливість розмножуватись.
 Програма має демонструвати свою роботу через вивід в stdout.
 
 */
 
-// Zookeeper
+//	NOTES to implementation
+//	Moving animal and cage to separate packages were done for encapsulation (correct using pointers to each other) and readability
+
 type zookeeper struct {
+	//	NOTE animals and cages are stored here for the purpose zoo keeper always to know how many animals and cages they have
+	animals []*animal.Animal
+	cages   []*cage.Cage
 }
 
-func (zookeeper) putToCage(c *cage, an *animal) {
-	c.put(an)
+func newZookeeper() *zookeeper {
+	return &zookeeper{}
 }
 
-// Animal
-
-type animalSpecies int
-
-const (
-	Lion animalSpecies = iota
-	Tiger
-	Wolf
-	Fox
-	AnimalCount	//	virtual element used to determine 'enum' size
-)
-
-func (sp animalSpecies) String() string {
-	switch sp {
-	case Lion:
-		return "Lion"
-	case Tiger:
-		return "Tiger"
-	case Wolf:
-		return "Wolf"
-	case Fox:
-		return "Fox"
+func (k *zookeeper) putToCage(c *cage.Cage, an *animal.Animal, areNew bool) error {
+	err := c.PutAnimal(an)
+	if err != nil {
+		return err
 	}
-	return "UNKNOWN ANIMAL"
+
+	err = an.SetCage(c)
+	if err != nil {
+		return err
+	}
+
+	if areNew {
+		k.animals = append(k.animals, an)
+		k.cages = append(k.cages, c)
+	}
+	return nil
 }
 
-type animal struct {
-	Id      int
-	Species animalSpecies
-	Cage    *cage
-}
-
-func newAnimal(id int, species animalSpecies, c *cage) *animal {
-	return &animal{
-		Id: id,
-		Species: species,
-		Cage: c,
+func (k *zookeeper) sleep() {
+	fmt.Println("zzzzz")
+	for _, an := range k.animals {
+		err := an.Escape()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
-func (*animal) reproduce(other *animal, new_id int) *animal {
-	return &animal{
-		Id:      new_id,
-		Species: other.Species,
-		Cage:    other.Cage,
+func (k *zookeeper) runAnimalsTinder() {
+	// NOTE this variable is pre-stored to give an option to reproduce only for animals that were created before
+	animalCount := len(k.animals)
+	newId := animalCount + 1
+	for i := 0; i < animalCount; i++ {
+		for j := i + 1; j < animalCount; j++ {
+			if k.animals[i].Species == k.animals[j].Species && k.animals[i].Gender != k.animals[j].Gender {
+				newAn, err := k.animals[i].Reproduce(k.animals[j], newId)
+				if err != nil {
+					fmt.Println(err, k.animals[i], k.animals[j])
+					continue
+				} else {
+					fmt.Println("We have a match!")
+					newC := cage.NewCage()
+					k.animals = append(k.animals, newAn)
+					k.cages = append(k.cages, newC)
+					newId++
+				}
+			}
+		}
 	}
 }
 
-func (an *animal) excape() {
-	an.Cage = nil
-}
-
-// Cage
-type cage struct {
-	animals []*animal
-}
-
-func (c* cage) put(an *animal) {
-	if an.Cage != nil {
-		fmt.Printf("This animal (id = %v) is already in cage\n", an.Id)
-		return
-	}
-
-	an.Cage = c
-	c.animals = append(c.animals, an)
-}
-
-// main
-func reproduceAnimal(animals *[]*animal, an *animal) {
-	new_an := an.reproduce(an, len(*animals)+1)
-	*animals = append(*animals, new_an)
-}
-
-func printAnimals(animals []*animal) {
-	for _, animal := range animals {
-		fmt.Printf("Animal #%v, species: %v, has cage = %v\n", animal.Id, animal.Species, animal.Cage != nil)
+func printAnimals(animals []*animal.Animal, context string) {
+	fmt.Println(context + ":\n")
+	for _, an := range animals {
+		fmt.Printf("Animal #%v,\tspecies: %v,\tgender: %v,\thas Cage = %v\n", an.Id, an.Species, an.Gender, an.GetCage() != nil)
 	}
 }
 
 func main() {
-	c := cage{}
+	animalCount := rand.IntN(10) + 10
 
-	//	Create animals
-	animal_count := rand.IntN(5) + 3
-	var animals []*animal
-	for i := 0; i < animal_count; i++ {
-		sp := animalSpecies(rand.IntN(int(AnimalCount)))
-		animals = append(animals, newAnimal(i + 1, sp, &c))
-	}
-	c.animals = animals
-	fmt.Printf("After creation cage contains %v animals\n\n", len(c.animals))
+	keeper := newZookeeper()
 
-	for _, animal := range(c.animals) {
-		animal.excape()
-	}
-	c.animals = nil
+	for i := 0; i < animalCount; i++ {
+		sp := rand.IntN(int(animal.AnimalSpeciesCount))
+		an := animal.NewAnimal(i+1, animal.AnimalSpecies(sp), nil)
+		c := cage.NewCage()
 
-	fmt.Printf("During freedom cage contains %v animals\n\n", len(c.animals))
-
-	fmt.Println("Free animals:")
-	printAnimals(animals)
-
-	//	Multiply animals randomly, using len(animals) - to multiply only 'known' animals, multiplied will be added to the end of animals
-	free_animal_count := len(animals)
-	for i := 0; i < free_animal_count; i++ {
-		r := rand.IntN(10)
-		if r < 3 {
-			fmt.Printf("Lucky day for animal with id = %v\n", animals[i].Id)
-			reproduceAnimal(&animals, animals[i])
+		err := keeper.putToCage(c, an, true)
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 
-	keeper := zookeeper{}
-	fmt.Println("\nPut all animals to the cage")
-	for _, animal := range animals {
-		keeper.putToCage(&c, animal)
+	printAnimals(keeper.animals, "First stage, everything is created")
+	keeper.sleep()
+	keeper.runAnimalsTinder()
+
+	fmt.Println("Zoo keeper woke up and catches the animals to put them into the cages")
+
+	for i := 0; i < len(keeper.animals); i++ {
+		keeper.putToCage(keeper.cages[i], keeper.animals[i], false)
 	}
 
-	//	Print all animals again
-	fmt.Println("\nFinally, animals are:")
-	printAnimals(animals)
+	printAnimals(keeper.animals, "Finally")
 }
