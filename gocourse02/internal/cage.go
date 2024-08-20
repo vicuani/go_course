@@ -1,16 +1,11 @@
-package cage
+package internal
 
 import (
 	"errors"
 )
 
-type IAnimal interface {
-	GetCage() *Cage
-	SetCage(c *Cage) error
-}
-
 type Cage struct {
-	animal IAnimal
+	animal *Animal
 }
 
 func NewCage() *Cage {
@@ -19,11 +14,11 @@ func NewCage() *Cage {
 	}
 }
 
-func (c *Cage) GetAnimal() IAnimal {
+func (c *Cage) GetAnimal() *Animal {
 	return c.animal
 }
 
-func (c *Cage) PutAnimal(an IAnimal) error {
+func (c *Cage) PutAnimal(an *Animal) error {
 	if c.animal != nil {
 		return errors.New("this cage is already full")
 	}

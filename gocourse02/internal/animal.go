@@ -1,7 +1,6 @@
-package animal
+package internal
 
 import (
-	"GoCourse/go_course/gocourse02/cage"
 	"errors"
 	"math/rand/v2"
 )
@@ -47,24 +46,23 @@ func (g gender) String() string {
 	return "NON-BINARY"
 }
 
-//	artificial struct, just to use embedded struct
+// artificial struct, just to use embedded struct
 type animalProperties struct {
 	Species AnimalSpecies
 	Gender  gender
 }
 
-
 type Animal struct {
 	Id int
 	animalProperties
-	cage *cage.Cage
+	cage *Cage
 }
 
-func (an *Animal) GetCage() *cage.Cage {
+func (an *Animal) GetCage() *Cage {
 	return an.cage
 }
 
-func (an *Animal) SetCage(c *cage.Cage) error {
+func (an *Animal) SetCage(c *Cage) error {
 	if an.cage != nil {
 		return errors.New("this animal already has a cage")
 	}
@@ -78,14 +76,14 @@ func (an *Animal) SetCage(c *cage.Cage) error {
 	return nil
 }
 
-func NewAnimal(id int, species AnimalSpecies, c *cage.Cage) *Animal {
+func NewAnimal(id int, species AnimalSpecies) *Animal {
 	return &Animal{
 		Id: id,
 		animalProperties: animalProperties{
 			Species: species,
 			Gender:  gender(rand.IntN(2)),
 		},
-		cage: c,
+		cage: nil,
 	}
 }
 
@@ -94,15 +92,15 @@ func (cur *Animal) Reproduce(other *Animal, newId int) (*Animal, error) {
 		return nil, errors.New("only free animals can reproduce")
 	}
 
-	if (cur.Gender == Male && other.Gender == Female) || (cur.Gender == Female && other.Gender == Male) {
-		if cur.Species != other.Species {
-			return nil, errors.New("animals with different species cannot reproduce")
-		} else {
-			return NewAnimal(newId, other.Species, nil), nil
-		}
-	} else {
+	if cur.Species != other.Species {
+		return nil, errors.New("animals with different species cannot reproduce")
+	}
+
+	if cur.Gender == other.Gender {
 		return nil, errors.New("this couple is not reproductable")
 	}
+
+	return NewAnimal(newId, other.Species), nil
 }
 
 func (an *Animal) Escape() error {

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"GoCourse/go_course/gocourse02/animal"
-	"GoCourse/go_course/gocourse02/cage"
 	"fmt"
 	"math/rand/v2"
+
+	"github.com/vicuani/go_course/gocourse02/internal"
 )
 
 /*
@@ -17,20 +17,17 @@ import (
 
 */
 
-//	NOTES to implementation
-//	Moving animal and cage to separate packages were done for encapsulation (correct using pointers to each other) and readability
-
+// zookeeper holds animals and cages to always know how many animals and cages there are.
 type zookeeper struct {
-	//	NOTE animals and cages are stored here for the purpose zoo keeper always to know how many animals and cages they have
-	animals []*animal.Animal
-	cages   []*cage.Cage
+	animals []*internal.Animal
+	cages   []*internal.Cage
 }
 
 func newZookeeper() *zookeeper {
 	return &zookeeper{}
 }
 
-func (k *zookeeper) putToCage(c *cage.Cage, an *animal.Animal, areNew bool) error {
+func (k *zookeeper) putToCage(c *internal.Cage, an *internal.Animal) error {
 	err := c.PutAnimal(an)
 	if err != nil {
 		return err
@@ -41,10 +38,6 @@ func (k *zookeeper) putToCage(c *cage.Cage, an *animal.Animal, areNew bool) erro
 		return err
 	}
 
-	if areNew {
-		k.animals = append(k.animals, an)
-		k.cages = append(k.cages, c)
-	}
 	return nil
 }
 
@@ -59,8 +52,7 @@ func (k *zookeeper) sleep() {
 }
 
 func (k *zookeeper) runAnimalsTinder() {
-	// NOTE this variable is pre-stored to give an option to reproduce only for animals that were created before
-	animalCount := len(k.animals)
+	animalCount := len(k.animals) // pre-stored to give an option to reproduce only for animals that were created before
 	newId := animalCount + 1
 	for i := 0; i < animalCount; i++ {
 		for j := i + 1; j < animalCount; j++ {
@@ -71,7 +63,7 @@ func (k *zookeeper) runAnimalsTinder() {
 					continue
 				} else {
 					fmt.Println("We have a match!")
-					newC := cage.NewCage()
+					newC := internal.NewCage()
 					k.animals = append(k.animals, newAn)
 					k.cages = append(k.cages, newC)
 					newId++
@@ -81,7 +73,7 @@ func (k *zookeeper) runAnimalsTinder() {
 	}
 }
 
-func printAnimals(animals []*animal.Animal, context string) {
+func printAnimals(animals []*internal.Animal, context string) {
 	fmt.Println(context + ":\n")
 	for _, an := range animals {
 		fmt.Printf("Animal #%v,\tspecies: %v,\tgender: %v,\thas Cage = %v\n", an.Id, an.Species, an.Gender, an.GetCage() != nil)
@@ -94,13 +86,16 @@ func main() {
 	keeper := newZookeeper()
 
 	for i := 0; i < animalCount; i++ {
-		sp := rand.IntN(int(animal.AnimalSpeciesCount))
-		an := animal.NewAnimal(i+1, animal.AnimalSpecies(sp), nil)
-		c := cage.NewCage()
+		sp := rand.IntN(int(internal.AnimalSpeciesCount))
+		an := internal.NewAnimal(i+1, internal.AnimalSpecies(sp))
+		c := internal.NewCage()
 
-		err := keeper.putToCage(c, an, true)
+		err := keeper.putToCage(c, an)
 		if err != nil {
 			fmt.Println(err)
+		} else {
+			keeper.animals = append(keeper.animals, an)
+			keeper.cages = append(keeper.cages, c)
 		}
 	}
 
@@ -111,7 +106,7 @@ func main() {
 	fmt.Println("Zoo keeper woke up and catches the animals to put them into the cages")
 
 	for i := 0; i < len(keeper.animals); i++ {
-		keeper.putToCage(keeper.cages[i], keeper.animals[i], false)
+		keeper.putToCage(keeper.cages[i], keeper.animals[i])
 	}
 
 	printAnimals(keeper.animals, "Finally")
