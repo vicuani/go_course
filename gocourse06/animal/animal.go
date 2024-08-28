@@ -29,7 +29,7 @@ func (an *Animal) RandomlyChangeIndicators() {
 	an.Hunger = rand.IntN(MAX_INDICATOR_VALUE + 1)
 	an.Mood = rand.IntN(MAX_INDICATOR_VALUE + 1)
 
-	fmt.Printf("Animal randomly changed it's vlaues: %v, has critical values: %v\n", *an, an.HasCriticalValues())
+	fmt.Printf("Animal randomly changed it's values: %v, has critical values: %v\n", *an, an.HasCriticalValues())
 }
 
 func (an *Animal) HasCriticalValues() bool {
