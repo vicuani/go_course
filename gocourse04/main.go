@@ -1,9 +1,3 @@
-package main
-
-import (
-	"math/rand"
-)
-
 /*
 
 При розробці системи «Розумний зоопарк» техлід ще не вирішив, яку базу даних використовувати і для реалізації прототипа вирішили зберігати дані в памʼяті програми, а саме — в мапах.
@@ -17,6 +11,13 @@ import (
 
 */
 
+package main
+
+import (
+	"fmt"
+	"math/rand/v2"
+)
+
 type Animal struct {
 	id         int
 	name       string
@@ -27,6 +28,7 @@ type Area struct {
 	animalType string
 	sectors    []*Sector
 }
+
 type Areas map[int]*Area
 
 func NewArea(animalType string) *Area {
@@ -52,10 +54,10 @@ func main() {
 	}
 
 	for _, area := range zoo.areas {
-		sectorsAmount := rand.Intn(5)
+		sectorsAmount := rand.IntN(5)
 		for i := 0; i < sectorsAmount; i++ {
 			sector := NewSector(area)
-			animalsCount := rand.Intn(10)
+			animalsCount := rand.IntN(10)
 			for j := 0; j < animalsCount; j++ {
 				sector.GenerateAndAddAnimal()
 			}
@@ -63,4 +65,6 @@ func main() {
 			area.sectors = append(area.sectors, sector)
 		}
 	}
+
+	fmt.Println("Done")
 }

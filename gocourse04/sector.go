@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 )
 
 type Sector struct {
@@ -27,7 +27,7 @@ const nameLength int = 10
 func randName() string {
 	b := make([]rune, nameLength)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rand.IntN(len(letters))]
 	}
 	return string(b)
 }
@@ -42,6 +42,15 @@ func (s *Sector) GenerateAndAddAnimal() {
 	s.animals = append(s.animals, animal)
 }
 
+func (s *Sector) GetAnimalIndex(an *Animal) int {
+	for index, currentAnimal := range s.animals {
+		if an == currentAnimal {
+			return index
+		}
+	}
+	return -1
+}
+
 func (s *Sector) FindAnimalByName(name string) *Animal {
 	for _, animal := range s.animals {
 		if animal.name == name {
@@ -51,27 +60,18 @@ func (s *Sector) FindAnimalByName(name string) *Animal {
 	return nil
 }
 
-type UtilitySpace struct {
-	sector *Sector
-}
-
-func NewUtilitySpace(sector *Sector) *UtilitySpace {
-	return &UtilitySpace{
-		sector: sector,
-	}
-}
-
-func (us *UtilitySpace) Cleaning() {
-	fmt.Println("Fröken Bock is on hers way")
-}
-
-func (us *UtilitySpace) Feeding(animalID int) error {
-	//	Find this animal
-	animals := us.sector.animals
-	if animalID < 0 || animalID >= len(animals) {
-		return fmt.Errorf("Animal with such ID doesn't exist")
+func (s *Sector) MoveAnimalToOtherSector(os *Sector, an *Animal) error {
+	oldIndex := s.GetAnimalIndex(an)
+	if oldIndex == -1 {
+		return fmt.Errorf("previous sector doesn't contains such an animal")
 	}
 
-	fmt.Printf("Feeding animal with id = %v\n", animalID)
+	newIndex := s.GetAnimalIndex(an)
+	if newIndex != -1 {
+		return fmt.Errorf("new sector already contains such an animal")
+	}
+
+	os.animals = append(os.animals, an)
+	s.animals = append(s.animals[:oldIndex], s.animals[oldIndex+1:]...)
 	return nil
 }
