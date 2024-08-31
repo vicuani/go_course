@@ -22,6 +22,6 @@ func (us *UtilitySpace) Feed(an *Animal) error {
 		return fmt.Errorf("such an animal doesn't exist")
 	}
 
-	fmt.Printf("Feeding an animal: %v\n", us.sector.animals[index])
+	fmt.Printf("Feeding an animal with index: %v\n", index)
 	return nil
 }

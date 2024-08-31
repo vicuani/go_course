@@ -24,6 +24,14 @@ type Animal struct {
 	animalType string
 }
 
+func NewAnimal(id int, animalType string, name string) *Animal {
+	return &Animal{
+		id:         id,
+		animalType: animalType,
+		name:       name,
+	}
+}
+
 type Area struct {
 	animalType string
 	sectors    []*Sector
@@ -54,10 +62,10 @@ func main() {
 	}
 
 	for _, area := range zoo.areas {
-		sectorsAmount := rand.IntN(5)
+		sectorsAmount := rand.IntN(5) + 2
 		for i := 0; i < sectorsAmount; i++ {
 			sector := NewSector(area)
-			animalsCount := rand.IntN(10)
+			animalsCount := rand.IntN(10) + 1
 			for j := 0; j < animalsCount; j++ {
 				sector.GenerateAndAddAnimal()
 			}
@@ -65,6 +73,14 @@ func main() {
 			area.sectors = append(area.sectors, sector)
 		}
 	}
+
+	birdsArea := zoo.areas[4]
+	firstBirdsSector := birdsArea.sectors[0]
+	firstBirdsSector.utilitySpace.Clean()
+	randBird := firstBirdsSector.animals[rand.IntN(len(firstBirdsSector.animals))]
+	firstBirdsSector.utilitySpace.Feed(randBird)
+	secondBirdsSector := birdsArea.sectors[1]
+	firstBirdsSector.MoveAnimalToOtherSector(secondBirdsSector, randBird)
 
 	fmt.Println("Done")
 }

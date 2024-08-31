@@ -2,66 +2,40 @@ package main
 
 import "testing"
 
-func TestAnimalGeneration(t *testing.T) {
-	area := NewArea("fishes")
-	sector := NewSector(area)
-	if len(sector.animals) != 0 {
-		t.Error("Animals count should be 0")
+func TestCreateAnimal(t *testing.T) {
+	id := 4
+	name := "Carl"
+	animalType := "dinosaur"
+	an := NewAnimal(id, animalType, name)
+
+	if an == nil {
+		t.Error("Animal wasn't created")
+		return
 	}
 
-	sector.GenerateAndAddAnimal()
-	if len(sector.animals) != 1 {
-		t.Error("Animals count should be 0")
+	if an.id != id {
+		t.Errorf("Incorrect id: expected: %v, current: %v", id, an.id)
+	}
+
+	if an.animalType != animalType {
+		t.Errorf("Incorrect animal type: expected: %v, current: %v", animalType, an.animalType)
+	}
+
+	if an.name != name {
+		t.Errorf("Incorrect name: expected: %v, current: %v", name, an.name)
 	}
 }
 
-func TestFindAnimalByName(t *testing.T) {
-	const animalType string = "fishes"
+func TestNewArea(t *testing.T) {
+	animalType := "octopus"
 	area := NewArea(animalType)
-	sector := NewSector(area)
 
-	createAndAddAnimal := func(id int, name string) {
-		an1 := &Animal{
-			id:         id,
-			animalType: animalType,
-			name:       name,
-		}
-		sector.animals = append(sector.animals, an1)
+	if area == nil {
+		t.Error("Area wasn't created")
+		return
 	}
 
-	createAndAddAnimal(0, "Jack")
-	createAndAddAnimal(1, "Bob")
-	createAndAddAnimal(2, "Carmen")
-	createAndAddAnimal(3, "Emma")
-
-	animal := sector.FindAnimalByName("Carmen")
-	if animal == nil {
-		t.Error("Carmen should be found")
-	}
-
-	animal = sector.FindAnimalByName("Louise")
-	if animal != nil {
-		t.Error("Louise shouldn't be found")
+	if area.animalType != animalType {
+		t.Errorf("Incorrect animal type: expected: %v, current: %v", animalType, area.animalType)
 	}
 }
-
-// func TestAnimalFeeding(t *testing.T) {
-// 	area := NewArea("fishes")
-// 	sector := NewSector(area)
-// 	sector.GenerateAndAddAnimal()
-
-// 	err := sector.utilitySpace.Feed(0)
-// 	if err != nil {
-// 		t.Error("This animal should exist!")
-// 	}
-
-// 	err = sector.utilitySpace.Feed(-1)
-// 	if err == nil {
-// 		t.Error("This animal doesn't exist!")
-// 	}
-
-// 	err = sector.utilitySpace.Feed(1)
-// 	if err == nil {
-// 		t.Error("This animal doesn't exist!")
-// 	}
-// }
