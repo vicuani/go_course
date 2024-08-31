@@ -67,7 +67,7 @@ func main() {
 				continue
 			}
 
-			//	If animal state is not dangerous it won't be added to dhEpisode
+			// If animal state is not dangerous it won't be added to dhEpisode
 			dhEpisode.Add(animals[j])
 			fhEpisode.Add(animals[j])
 		}
