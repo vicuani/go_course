@@ -1,12 +1,5 @@
-package main
-
-import (
-	"fmt"
-	"math/rand/v2"
-)
-
 /*
-3. Написати програму «Зооспостереження»
+Написати програму «Зооспостереження»
 
 Треба зробити бекенд для сервера, на який надходять нічні зображення з різних камер спостереження з датчиком руху, розвішаних по всьому зоопарку.
 У зоопарку існує кілька типів камер. Деякі камери працюють із зовнішнім світлом, інші — в нічному режимі.
@@ -21,13 +14,24 @@ import (
 
 */
 
-func createAnimalAndCamera(id int) (camera, *animal) {
-	var cam camera
-	an := newAnimal(id)
+package main
+
+import (
+	"fmt"
+	"math/rand/v2"
+
+	"github.com/vicuani/go_course/gocourse05/animal"
+	"github.com/vicuani/go_course/gocourse05/camera"
+	"github.com/vicuani/go_course/gocourse05/server"
+)
+
+func createAnimalAndCamera(id int) (camera.Camera, *animal.Animal) {
+	var cam camera.Camera
+	an := animal.NewAnimal(id)
 	if rand.IntN(2) == 0 {
-		cam = newExternalLightCamera(id, an)
+		cam = camera.NewExternalLightCamera(id, an)
 	} else {
-		cam = newNightLightCamera(id, an)
+		cam = camera.NewNightLightCamera(id, an)
 	}
 	return cam, an
 }
@@ -35,8 +39,8 @@ func createAnimalAndCamera(id int) (camera, *animal) {
 func main() {
 	cameraCount := rand.IntN(10) + 5
 
-	var cameras []camera
-	var animals []*animal
+	var cameras []camera.Camera
+	var animals []*animal.Animal
 
 	for i := range cameraCount {
 		cam, an := createAnimalAndCamera(i)
@@ -44,29 +48,35 @@ func main() {
 		animals = append(animals, an)
 	}
 
-	history := animalHistory{}
+	fmt.Printf("Created %v animals and their cameras\n", len(animals))
+	server := server.NewServer()
 
 	movesCount := 10
-	timeOfDay := partOfDay("Morning")
+	timeOfDay := camera.PartOfDay("Morning")
 	for i := 0; i < movesCount; i++ {
-		timeOfDay = nextPartOfDay(timeOfDay)
-		currentHistory := []*animal{}
+		timeOfDay = camera.NextPartOfDay(timeOfDay)
+		fmt.Printf("\nNext part of the day: %v, handling it\n", timeOfDay)
+
+		fhEpisode := animal.CreateFullHistoryEpisode()
+		dhEpisode := animal.CreateDangerousHistoryEpisode()
 		for j := 0; j < cameraCount; j++ {
-			animals[j].state = generateRandomAnimalState()
+			animals[j].State = animal.GenerateRandomAnimalState()
 			err := cameras[j].Process(timeOfDay)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
 
-			if isAnimalStateDangerous(animals[j].state) {
-				fmt.Printf("Animal with id %v has dangerous state: %v", animals[j].id, animals[j].state)
-			}
-			currentHistory = append(currentHistory, animals[j])
+			//	If animal state is not dangerous it won't be added to dhEpisode
+			dhEpisode.Add(animals[j])
+			fhEpisode.Add(animals[j])
 		}
-		history[i] = currentHistory
+		server.FullHistory = append(server.FullHistory, fhEpisode)
+		fmt.Printf("Dangerous history will be extended for: %v\n", dhEpisode.GetData())
+		server.DangerousHistory = append(server.DangerousHistory, dhEpisode)
 	}
 
-	fmt.Println("\nAll history:")
-	fmt.Println(history)
+	randEpisodeIndex := rand.IntN(movesCount)
+	fmt.Printf("\nGet history for the move: %v\n", randEpisodeIndex)
+	server.PrintCompleteHistoryForID(randEpisodeIndex)
 }
