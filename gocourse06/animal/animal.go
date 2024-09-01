@@ -5,58 +5,27 @@ import (
 	"math/rand/v2"
 )
 
-const MAX_INDICATOR_VALUE = 100
-const CRITICAL_INDICATOR_VALUE = 20
+const MaxIndicatorValue = 100
+const IndicatorCoef = 30
+const CriticalIndicatorCoef = 10
+
+const MaxSatietyCoefDelta = 40
 
 type Animal struct {
-	id     int
-	Health int
-	Hunger int
-	Mood   int
+	ID      int
+	Health  float64
+	Mood    float64
+	Satiety float64
+	busy    bool
 }
 
 func NewAnimal(id int) *Animal {
 	return &Animal{
-		id:     id,
-		Health: MAX_INDICATOR_VALUE,
-		Hunger: MAX_INDICATOR_VALUE,
-		Mood:   MAX_INDICATOR_VALUE,
-	}
-}
-
-func (an *Animal) RandomlyChangeIndicators() {
-	an.Health = rand.IntN(MAX_INDICATOR_VALUE + 1)
-	an.Hunger = rand.IntN(MAX_INDICATOR_VALUE + 1)
-	an.Mood = rand.IntN(MAX_INDICATOR_VALUE + 1)
-
-	fmt.Printf("Animal randomly changed it's values: %v, has critical values: %v\n", *an, an.HasCriticalValues())
-}
-
-func (an *Animal) HasCriticalValues() bool {
-	return an.Health < CRITICAL_INDICATOR_VALUE || an.Hunger < CRITICAL_INDICATOR_VALUE || an.Mood < CRITICAL_INDICATOR_VALUE
-}
-
-type Enclosure struct {
-	ID       int
-	IsOpened bool
-}
-
-func NewEnclosure(id int) *Enclosure {
-	return &Enclosure{
-		ID:       id,
-		IsOpened: rand.IntN(2) == 1,
-	}
-}
-
-type Feeder struct {
-	ID      int
-	IsEmpty bool
-}
-
-func NewFeeder(id int) *Feeder {
-	return &Feeder{
 		ID:      id,
-		IsEmpty: rand.IntN(2) == 1,
+		Health:  MaxIndicatorValue,
+		Mood:    MaxIndicatorValue,
+		Satiety: MaxIndicatorValue,
+		busy:    false,
 	}
 }
 
@@ -69,20 +38,56 @@ func GenerateAnimals(n int) []*Animal {
 	return animals
 }
 
-func GenerateEnclosures(n int) []*Enclosure {
-	var enclosures []*Enclosure
-	for i := 0; i < n; i++ {
-		enclosure := NewEnclosure(i)
-		enclosures = append(enclosures, enclosure)
-	}
-	return enclosures
+func (an *Animal) HasCriticalValues() bool {
+	return an.Health < CriticalIndicatorCoef || an.Satiety < CriticalIndicatorCoef || an.Mood < CriticalIndicatorCoef
 }
 
-func GenerateFeeders(n int) []*Feeder {
-	var feeders []*Feeder
-	for i := 0; i < n; i++ {
-		feeder := NewFeeder(i)
-		feeders = append(feeders, feeder)
+func (an *Animal) IsHungry() bool {
+	return an.Satiety < IndicatorCoef
+}
+
+func (an *Animal) IsBusy() bool {
+	return an.busy
+}
+
+func (an *Animal) free() {
+	an.busy = false
+}
+
+func (an *Animal) RandomlyChangeIndicators() {
+	if an.IsBusy() {
+		fmt.Printf("Cannot change indicators for animal #%v, it is busy\n", an.ID)
+		return
 	}
-	return feeders
+
+	defer an.free()
+
+	an.busy = true
+	an.Health = float64(rand.IntN(MaxIndicatorValue) + 1)
+	an.Mood = float64(rand.IntN(MaxIndicatorValue) + 1)
+
+	//	hunger is more linear
+	randDelta := float64(rand.IntN(int(MaxSatietyCoefDelta-10) + 10))
+	an.Satiety = max(CriticalIndicatorCoef, an.Satiety-randDelta)
+
+	fmt.Printf("Animal randomly changed it's values: %v, has critical values: %v\n", *an, an.HasCriticalValues())
+}
+
+func (an *Animal) eat(f *Feeder) error {
+	if an.IsBusy() {
+		return fmt.Errorf("this animal #%v cannot eat, it is busy", an.ID)
+	}
+
+	if an.Satiety > IndicatorCoef {
+		return fmt.Errorf("this animal #%v is not yet hungry", an.ID)
+	}
+
+	defer an.free()
+
+	an.busy = true
+	eaten := min(MaxIndicatorValue-an.Satiety, f.volume)
+	an.Satiety += eaten
+	f.volume -= eaten
+	fmt.Printf("Animal #%v ate %v food from feeder #%v. Now it's satiety = %v, feeders volume = %v\n", an.ID, eaten, f.ID, an.Satiety, f.volume)
+	return nil
 }
