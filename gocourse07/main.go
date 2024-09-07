@@ -30,18 +30,19 @@ import (
 	"github.com/vicuani/go_course/gocourse07/sensor"
 )
 
-const daysCount = 4
-const maxIterations = 10
+const (
+	daysCount     = 4
+	maxIterations = 10
+)
 
 func main() {
-
 	sensors := []sensor.Sensor{
-		sensor.CreateBrightnessSensor(0, 100),
+		sensor.NewBrightnessSensor(0, 100),
 		sensor.CreateHumiditySensor(0, 100),
-		sensor.CreateTemperatureSensor(10, 40),
+		sensor.NewTemperatureSensor(10, 40),
 	}
 
-	//	make a channel with buffer able to contain all data from all sensors during day
+	// make a channel with buffer able to contain all data from all sensors during day
 	centralSystem := centralsystem.CentralSystem{}
 
 	var totalIterationsCount int

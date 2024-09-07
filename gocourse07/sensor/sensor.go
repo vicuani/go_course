@@ -7,18 +7,20 @@ import (
 	"time"
 )
 
-const minInterval = 10
-const maxInterval = 50
+const (
+	minInterval = 10
+	maxInterval = 50
+)
 
 type SensorData struct {
-	Type  string
-	Value int
+	sensorType string
+	value      int
 }
 
-func CreateSensorData(t string, v int) SensorData {
+func NewSensorData(t string, v int) SensorData {
 	return SensorData{
-		Type:  t,
-		Value: v,
+		sensorType: t,
+		value:      v,
 	}
 }
 
@@ -30,7 +32,7 @@ func collect(centralChan chan<- SensorData, name string, minValue int, maxValue 
 	for range iterationsCount {
 		data := rand.IntN(maxValue-minValue) + minValue
 		fmt.Printf("\nCollect data for %v: %v\n", name, data)
-		centralChan <- CreateSensorData(name, data)
+		centralChan <- NewSensorData(name, data)
 		time.Sleep(time.Duration(rand.IntN(maxInterval-minInterval)+minInterval) * time.Millisecond)
 	}
 }
@@ -41,7 +43,7 @@ type BrightnessSensor struct {
 	maxValue int
 }
 
-func CreateBrightnessSensor(minValue int, maxValue int) Sensor {
+func NewBrightnessSensor(minValue int, maxValue int) *BrightnessSensor {
 	return &BrightnessSensor{
 		name:     "brightness",
 		minValue: minValue,
@@ -79,7 +81,7 @@ type TemperatureSensor struct {
 	maxValue int
 }
 
-func CreateTemperatureSensor(minValue int, maxValue int) Sensor {
+func NewTemperatureSensor(minValue int, maxValue int) *TemperatureSensor {
 	return &TemperatureSensor{
 		name:     "temperature",
 		minValue: minValue,
