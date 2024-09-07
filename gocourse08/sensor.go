@@ -1,8 +1,12 @@
 package main
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
 
-type Sensor[T any] interface {
+	"golang.org/x/exp/constraints"
+)
+
+type Sensor[T constraints.Integer] interface {
 	GenerateData() T
 }
 

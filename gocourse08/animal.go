@@ -6,7 +6,7 @@ type AnimalData struct {
 	animalType  string
 	pulse       int
 	temperature float64
-	breathing   []int
+	breaths     []int
 	sounds      []int
 	timestamp   time.Time
 }
@@ -20,17 +20,22 @@ func NewAnimalData(pulse int, temperature float64) *AnimalData {
 }
 
 func determineAnimalType(pulse int, temperature float64) string {
-	if pulse <= 60 {
+	switch {
+	case pulse <= 60:
 		return "Bear"
-	} else if pulse > 60 && pulse <= 90 {
-		if temperature > 37.5 {
+	case pulse > 60 && pulse <= 90:
+		switch {
+		case temperature > 37.5:
 			return "Gorilla"
-		} else {
+		default:
 			return "Ape"
 		}
-	} else if temperature > 38.5 {
-		return "Lion"
-	} else {
-		return "Tiger"
+	default:
+		switch {
+		case temperature > 38.5:
+			return "Lion"
+		default:
+			return "Tiger"
+		}
 	}
 }

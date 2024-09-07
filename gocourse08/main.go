@@ -11,15 +11,15 @@ import (
 func SimulateGPRSSignal(collar *Collar, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		fmt.Println("Set GPRS signal to false")
-		collar.gprsSignal = false
+		collar.SetGPRSSignal(false)
 
 		absenseTime := rand.IntN(100) + 50
 		time.Sleep(time.Millisecond * time.Duration(absenseTime))
 
 		fmt.Println("Set GPRS signal to true")
-		collar.gprsSignal = true
+		collar.SetGPRSSignal(true)
 
 		presenseTime := rand.IntN(1000) + 500
 		time.Sleep(time.Millisecond * time.Duration(presenseTime))
@@ -41,8 +41,7 @@ func main() {
 	wg.Add(1)
 	go collar.CollectSensorData(dataChan, &wg)
 
-	wg.Add(1)
-	go collar.TransmitData(ctx, dataChan, &wg)
+	collar.TransmitData(ctx, dataChan)
 
 	wg.Wait()
 	fmt.Println("The end")

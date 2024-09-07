@@ -9,10 +9,14 @@ import (
 )
 
 type Collar struct {
-	data       *AnimalData
-	gprsSignal bool
-	storedData []*AnimalData
-	mtx        sync.Mutex
+	dataMu sync.Mutex
+	data   *AnimalData
+
+	gprsSignalMu sync.Mutex
+	gprsSignal   bool
+
+	storedDataMu sync.Mutex
+	storedData   []*AnimalData
 }
 
 func NewCollar() *Collar {
@@ -20,6 +24,19 @@ func NewCollar() *Collar {
 		data:       NewAnimalData(rand.IntN(50)+30, float64(rand.IntN(10)+32)),
 		gprsSignal: false,
 	}
+}
+
+func (c *Collar) SetGPRSSignal(v bool) {
+	c.gprsSignalMu.Lock()
+	c.gprsSignal = v
+	c.gprsSignalMu.Unlock()
+}
+
+func (c *Collar) GPRSSignal() bool {
+	defer c.gprsSignalMu.Unlock()
+
+	c.gprsSignalMu.Lock()
+	return c.gprsSignal
 }
 
 func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGroup) {
@@ -32,10 +49,10 @@ func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGrou
 		c.breathingData(breathingSensor)
 		c.soundData(soundSensor)
 
-		c.mtx.Lock()
+		c.dataMu.Lock()
 		c.data.timestamp = time.Now()
 		dataChan <- *c.data
-		c.mtx.Unlock()
+		c.dataMu.Unlock()
 
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -44,21 +61,19 @@ func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGrou
 
 func (c *Collar) breathingData(sensor Sensor[int]) {
 	bData := sensor.GenerateData()
-	c.mtx.Lock()
-	c.data.breathing = append(c.data.breathing, bData)
-	c.mtx.Unlock()
+	c.dataMu.Lock()
+	c.data.breaths = append(c.data.breaths, bData)
+	c.dataMu.Unlock()
 }
 
 func (c *Collar) soundData(sensor Sensor[int]) {
 	sData := sensor.GenerateData()
-	c.mtx.Lock()
+	c.dataMu.Lock()
 	c.data.sounds = append(c.data.sounds, sData)
-	c.mtx.Unlock()
+	c.dataMu.Unlock()
 }
 
-func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -69,22 +84,23 @@ func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData, w
 				return
 			}
 
-			if c.gprsSignal {
+			if c.GPRSSignal() {
 				fmt.Printf("Transmit data: %v to server...\n", data)
 				c.TransmitStoredData()
 			} else {
 				fmt.Printf("Store data: %v to internal memory...\n", data)
-				c.mtx.Lock()
+				c.storedDataMu.Lock()
 				c.storedData = append(c.storedData, &data)
-				c.mtx.Unlock()
+				c.storedDataMu.Unlock()
 			}
 		}
 	}
 }
 
 func (c *Collar) TransmitStoredData() {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	defer c.storedDataMu.Unlock()
+
+	c.storedDataMu.Lock()
 	for _, storedData := range c.storedData {
 		fmt.Printf("Transmit stored data: %v to server...\n", storedData)
 	}
