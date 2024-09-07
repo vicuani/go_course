@@ -17,8 +17,7 @@ func (us *UtilitySpace) Clean() {
 }
 
 func (us *UtilitySpace) Feed(an *Animal) error {
-	contains := us.sector.ContainsAnimal(an)
-	if !contains {
+	if !us.sector.ContainsAnimal(an) {
 		return fmt.Errorf("such an animal doesn't exist")
 	}
 

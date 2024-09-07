@@ -45,12 +45,7 @@ func randName() string {
 }
 
 func (s *Sector) ContainsAnimal(an *Animal) bool {
-	for _, currentAnimal := range s.animals {
-		if an == currentAnimal {
-			return true
-		}
-	}
-	return false
+	return s.AnimalIndex(an) != -1
 }
 
 func (s *Sector) AnimalIndex(an *Animal) int {

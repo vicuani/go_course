@@ -86,7 +86,7 @@ func TestAnimalIndex(t *testing.T) {
 	animal := sector.FindAnimalByName("Bob")
 	index := sector.AnimalIndex(animal)
 
-	if index == -1 {
-		t.Error("This animal shouldn't have index -1!")
+	if index != 1 {
+		t.Error("This animal should have index 1!")
 	}
 }

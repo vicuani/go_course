@@ -9,8 +9,7 @@ func TestCreateAnimal(t *testing.T) {
 	an := NewAnimal(id, animalType, name)
 
 	if an == nil {
-		t.Error("Animal wasn't created")
-		return
+		t.Fatal("Animal wasn't created")
 	}
 
 	if an.id != id {
@@ -31,8 +30,7 @@ func TestNewArea(t *testing.T) {
 	area := NewArea(animalType)
 
 	if area == nil {
-		t.Error("Area wasn't created")
-		return
+		t.Fatal("Area wasn't created")
 	}
 
 	if area.animalType != animalType {
