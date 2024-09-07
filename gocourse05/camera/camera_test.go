@@ -6,60 +6,52 @@ import (
 	"github.com/vicuani/go_course/gocourse05/animal"
 )
 
-func preconditionsExternalLight() *ExternalLightCamera {
-	id := 4
-	animal := animal.NewAnimal(id)
-	return NewExternalLightCamera(id, animal)
-}
+func TestExternalLightCamera_Process(t *testing.T) {
+	t.Run("when Morning should return nil", func(t *testing.T) {
+		pod := PartOfDay("Morning")
+		animal := animal.NewAnimal(4)
+		camera := NewExternalLightCamera(4, animal)
 
-func TestExternalLightCamera(t *testing.T) {
-	camera := preconditionsExternalLight()
-
-	positiveCheck := func(pod PartOfDay) {
 		err := camera.Process(pod)
+
 		if err != nil {
-			t.Errorf("External light camera doesn't work in the %v despite it should\n", pod)
+			t.Errorf("Process() failed: got=%v, but want=<nil>", err)
 		}
-	}
+	})
+	t.Run("when Evening should return error", func(t *testing.T) {
+		pod := PartOfDay("Evening")
+		animal := animal.NewAnimal(7)
+		camera := NewExternalLightCamera(7, animal)
 
-	negativeCheck := func(pod PartOfDay) {
 		err := camera.Process(pod)
+
 		if err == nil {
-			t.Errorf("External light camera works in the %v despite it shouldn't\n", pod)
+			t.Error("Process() failed: got=<nil>, but want error")
 		}
-	}
-
-	positiveCheck(PartOfDay("Morning"))
-	positiveCheck(PartOfDay("Day"))
-	negativeCheck(PartOfDay("Evening"))
-	negativeCheck(PartOfDay("Night"))
+	})
 }
 
-func preconditionsNightLight() *NightLightCamera {
-	id := 14
-	animal := animal.NewAnimal(id)
-	return NewNightLightCamera(id, animal)
-}
+func TestNightlLightCamera_Process(t *testing.T) {
+	t.Run("when Night should return nil", func(t *testing.T) {
+		pod := PartOfDay("Night")
+		animal := animal.NewAnimal(6)
+		camera := NewNightLightCamera(6, animal)
 
-func TestNightLightCamera(t *testing.T) {
-	camera := preconditionsNightLight()
-
-	positiveCheck := func(pod PartOfDay) {
 		err := camera.Process(pod)
+
 		if err != nil {
-			t.Errorf("Night light camera doesn't work in the %v despite it should\n", pod)
+			t.Errorf("Process() failed: got=%v, but want=<nil>", err)
 		}
-	}
+	})
+	t.Run("when Day should return error", func(t *testing.T) {
+		pod := PartOfDay("Day")
+		animal := animal.NewAnimal(17)
+		camera := NewNightLightCamera(17, animal)
 
-	negativeCheck := func(pod PartOfDay) {
 		err := camera.Process(pod)
-		if err == nil {
-			t.Errorf("Night light camera works in the %v despite it shouldn't\n", pod)
-		}
-	}
 
-	negativeCheck(PartOfDay("Morning"))
-	negativeCheck(PartOfDay("Day"))
-	positiveCheck(PartOfDay("Evening"))
-	positiveCheck(PartOfDay("Night"))
+		if err == nil {
+			t.Error("Process() failed: got=<nil>, but want error")
+		}
+	})
 }

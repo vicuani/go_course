@@ -25,42 +25,43 @@ import (
 	"github.com/vicuani/go_course/gocourse05/server"
 )
 
-func createAnimalAndCamera(id int) (camera.Camera, *animal.Animal) {
-	var cam camera.Camera
-	an := animal.NewAnimal(id)
-	if rand.IntN(2) == 0 {
-		cam = camera.NewExternalLightCamera(id, an)
-	} else {
-		cam = camera.NewNightLightCamera(id, an)
-	}
-	return cam, an
+type Camera interface {
+	Process(pod camera.PartOfDay) error
 }
 
 func main() {
-	cameraCount := rand.IntN(10) + 5
-
-	var cameras []camera.Camera
+	var cameras []Camera
 	var animals []*animal.Animal
 
-	for i := range cameraCount {
-		cam, an := createAnimalAndCamera(i)
+	for i := range rand.IntN(10) + 5 {
+		var cam Camera
+		an := animal.NewAnimal(i)
+		if rand.IntN(2) == 0 {
+			cam = camera.NewExternalLightCamera(i, an)
+		} else {
+			cam = camera.NewNightLightCamera(i, an)
+		}
+
 		cameras = append(cameras, cam)
 		animals = append(animals, an)
 	}
 
 	fmt.Printf("Created %v animals and their cameras\n", len(animals))
-	server := server.NewServer()
+	srv := server.NewServer()
 
 	movesCount := 10
 	timeOfDay := camera.PartOfDay("Morning")
 	for i := 0; i < movesCount; i++ {
-		timeOfDay = camera.NextPartOfDay(timeOfDay)
+		timeOfDay, err := camera.NextPartOfDay(timeOfDay)
+		if err != nil {
+			fmt.Println(err)
+		}
 		fmt.Printf("\nNext part of the day: %v, handling it\n", timeOfDay)
 
-		fhEpisode := animal.CreateFullHistoryEpisode()
-		dhEpisode := animal.CreateDangerousHistoryEpisode()
-		for j := 0; j < cameraCount; j++ {
-			animals[j].State = animal.GenerateRandomAnimalState()
+		fhEpisode := server.CreateFullHistoryEpisode()
+		dhEpisode := server.CreateDangerousHistoryEpisode()
+		for j := 0; j < len(cameras); j++ {
+			animals[j].SetRandomState()
 			err := cameras[j].Process(timeOfDay)
 			if err != nil {
 				fmt.Println(err)
@@ -71,12 +72,12 @@ func main() {
 			dhEpisode.Add(animals[j])
 			fhEpisode.Add(animals[j])
 		}
-		server.FullHistory = append(server.FullHistory, fhEpisode)
+		srv.AddFullHistoryEpisode(fhEpisode)
 		fmt.Printf("Dangerous history will be extended for: %v\n", dhEpisode.GetData())
-		server.DangerousHistory = append(server.DangerousHistory, dhEpisode)
+		srv.AddDangerousHistoryEpisode(dhEpisode)
 	}
 
 	randEpisodeIndex := rand.IntN(movesCount)
 	fmt.Printf("\nGet history for the move: %v\n", randEpisodeIndex)
-	server.PrintCompleteHistoryForID(randEpisodeIndex)
+	srv.PrintCompleteHistoryForID(randEpisodeIndex)
 }
