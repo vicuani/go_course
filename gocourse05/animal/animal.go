@@ -16,27 +16,38 @@ func generateRandomAnimalSpecies() animalSpecies {
 	return allAnimalSpecies[rand.IntN(len(allAnimalSpecies))]
 }
 
-type animalState string
+type AnimalState string
 
-func (s animalState) String() string {
+func (s AnimalState) String() string {
 	return string(s)
 }
 
-var allAnimalStates = []animalState{"Sleeping", "Running", "Washing", "Eating", "Fighting", "GettingSick", "Escaping"}
-var dangerousAnimalStates = allAnimalStates[4:]
+var (
+	allAnimalStates       = []AnimalState{"Sleeping", "Running", "Washing", "Eating", "Fighting", "GettingSick", "Escaping"}
+	dangerousAnimalStates = allAnimalStates[4:]
+)
 
 type Animal struct {
 	id      int
 	species animalSpecies
-	state   animalState
+	state   AnimalState
 }
 
 func NewAnimal(id int) *Animal {
 	return &Animal{
 		id:      id,
 		species: generateRandomAnimalSpecies(),
-		state:   animalState("Sleeping"),
+		state:   AnimalState("Sleeping"),
 	}
+}
+
+// only for test
+func (an *Animal) SetState(s AnimalState) {
+	an.state = s
+}
+
+func (an *Animal) State() AnimalState {
+	return an.state
 }
 
 func (an *Animal) SetRandomState() {
@@ -51,6 +62,3 @@ func (an *Animal) IsAnimalStateDangerous() bool {
 	}
 	return false
 }
-
-// Animals themselves are adding to history, because their state can be changed
-type Animals []Animal

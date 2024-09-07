@@ -6,68 +6,58 @@ import (
 	"github.com/vicuani/go_course/gocourse05/animal"
 )
 
-// this interface cannot be moved to main to avoid cycle imports
-type HistoryEpisode interface {
-	Add(an *animal.Animal)
-	GetData() animal.Animals
-}
-
 type FullHistoryEpisode struct {
-	data animal.Animals
+	animals []animal.Animal
 }
 
-func CreateFullHistoryEpisode() HistoryEpisode {
-	return &FullHistoryEpisode{
-		data: animal.Animals{},
-	}
+func CreateFullHistoryEpisode() *FullHistoryEpisode {
+	return &FullHistoryEpisode{}
 }
 
 func (fh *FullHistoryEpisode) Add(an *animal.Animal) {
-	fh.data = append(fh.data, *an)
+	fh.animals = append(fh.animals, *an)
 }
 
-func (fh *FullHistoryEpisode) GetData() animal.Animals {
-	return fh.data
+func (fh *FullHistoryEpisode) GetData() []animal.Animal {
+	return fh.animals
 }
 
 type DangerousHistoryEpisode struct {
-	data animal.Animals
+	animals []animal.Animal
 }
 
-func CreateDangerousHistoryEpisode() HistoryEpisode {
-	return &DangerousHistoryEpisode{
-		data: animal.Animals{},
-	}
+func CreateDangerousHistoryEpisode() *DangerousHistoryEpisode {
+	return &DangerousHistoryEpisode{}
 }
 
 func (dh *DangerousHistoryEpisode) Add(an *animal.Animal) {
 	if !an.IsAnimalStateDangerous() {
 		return
 	}
-	dh.data = append(dh.data, *an)
+	dh.animals = append(dh.animals, *an)
 }
 
-func (dh *DangerousHistoryEpisode) GetData() animal.Animals {
-	return dh.data
+func (dh *DangerousHistoryEpisode) GetData() []animal.Animal {
+	return dh.animals
 }
 
 type Server struct {
-	fullHistory      []HistoryEpisode
-	dangerousHistory []HistoryEpisode
+	fullHistory      []*FullHistoryEpisode
+	dangerousHistory []*DangerousHistoryEpisode
 }
 
 func NewServer() *Server {
 	return &Server{
-		fullHistory:      []HistoryEpisode{},
-		dangerousHistory: []HistoryEpisode{},
+		fullHistory:      []*FullHistoryEpisode{},
+		dangerousHistory: []*DangerousHistoryEpisode{},
 	}
 }
 
-func (s *Server) AddFullHistoryEpisode(e HistoryEpisode) {
+func (s *Server) AddFullHistoryEpisode(e *FullHistoryEpisode) {
 	s.fullHistory = append(s.fullHistory, e)
 }
 
-func (s *Server) AddDangerousHistoryEpisode(e HistoryEpisode) {
+func (s *Server) AddDangerousHistoryEpisode(e *DangerousHistoryEpisode) {
 	s.dangerousHistory = append(s.dangerousHistory, e)
 }
 

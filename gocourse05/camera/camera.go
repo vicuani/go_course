@@ -1,6 +1,7 @@
 package camera
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/vicuani/go_course/gocourse05/animal"
@@ -8,10 +9,12 @@ import (
 
 type PartOfDay string
 
-const Morning = PartOfDay("Morning")
-const Day = PartOfDay("Day")
-const Evening = PartOfDay("Evening")
-const Night = PartOfDay("Night")
+const (
+	Morning = PartOfDay("Morning")
+	Day     = PartOfDay("Day")
+	Evening = PartOfDay("Evening")
+	Night   = PartOfDay("Night")
+)
 
 func (pod PartOfDay) String() string {
 	return string(pod)
@@ -28,7 +31,7 @@ func NextPartOfDay(pod PartOfDay) (PartOfDay, error) {
 			return allPartsOfDay[i+1], nil
 		}
 	}
-	return PartOfDay("non-existable"), fmt.Errorf("invalid part of day")
+	return "", errors.New("invalid part of day")
 }
 
 type ExternalLightCamera struct {
@@ -36,7 +39,7 @@ type ExternalLightCamera struct {
 	animal *animal.Animal
 }
 
-func NewExternalLightCamera(id int, an *animal.Animal) *ExternalLightCamera {
+func NewExternalLight(id int, an *animal.Animal) *ExternalLightCamera {
 	return &ExternalLightCamera{id: id, animal: an}
 }
 
@@ -53,7 +56,7 @@ type NightLightCamera struct {
 	animal *animal.Animal
 }
 
-func NewNightLightCamera(id int, an *animal.Animal) *NightLightCamera {
+func NewNightLight(id int, an *animal.Animal) *NightLightCamera {
 	return &NightLightCamera{id: id, animal: an}
 }
 

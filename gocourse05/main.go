@@ -37,9 +37,9 @@ func main() {
 		var cam Camera
 		an := animal.NewAnimal(i)
 		if rand.IntN(2) == 0 {
-			cam = camera.NewExternalLightCamera(i, an)
+			cam = camera.NewExternalLight(i, an)
 		} else {
-			cam = camera.NewNightLightCamera(i, an)
+			cam = camera.NewNightLight(i, an)
 		}
 
 		cameras = append(cameras, cam)
@@ -51,7 +51,7 @@ func main() {
 
 	movesCount := 10
 	timeOfDay := camera.PartOfDay("Morning")
-	for i := 0; i < movesCount; i++ {
+	for range movesCount {
 		timeOfDay, err := camera.NextPartOfDay(timeOfDay)
 		if err != nil {
 			fmt.Println(err)
@@ -60,11 +60,11 @@ func main() {
 
 		fhEpisode := server.CreateFullHistoryEpisode()
 		dhEpisode := server.CreateDangerousHistoryEpisode()
-		for j := 0; j < len(cameras); j++ {
+		for j := range len(cameras) {
 			animals[j].SetRandomState()
 			err := cameras[j].Process(timeOfDay)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("Failed to process from camera=%v for time of day=%v, error=%v\n", j, timeOfDay, err)
 				continue
 			}
 
