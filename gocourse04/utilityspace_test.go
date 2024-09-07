@@ -3,14 +3,13 @@ package main
 import "testing"
 
 func TestNewUtilitySpace(t *testing.T) {
-	stubSector := &Sector {
-		area : NewArea("fishes"),
+	stubSector := &Sector{
+		area: NewArea("fishes"),
 	}
 	utilitySpace := NewUtilitySpace(stubSector)
 
 	if utilitySpace == nil {
-		t.Error("Utility space wasn't created")
-		return
+		t.Fatal("Utility space wasn't created")
 	}
 
 	if utilitySpace.sector != stubSector {
@@ -21,7 +20,7 @@ func TestNewUtilitySpace(t *testing.T) {
 func TestAnimalFeeding(t *testing.T) {
 	area := NewArea("fishes")
 	sector := NewSector(area)
-	sector.GenerateAndAddAnimal()
+	sector.AddAnimal(sector.NewRandomAnimal())
 	animal1 := sector.animals[0]
 
 	err := sector.utilitySpace.Feed(animal1)

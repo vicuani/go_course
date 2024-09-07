@@ -24,12 +24,16 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 const nameLength int = 10
 
-func (s *Sector) CreateAndAddAnimal(id int, name string) {
-	s.animals = append(s.animals, NewAnimal(id, s.area.animalType, name))
+func (s *Sector) AddAnimal(an *Animal) {
+	s.animals = append(s.animals, an)
 }
 
-func (s *Sector) GenerateAndAddAnimal() {
-	s.CreateAndAddAnimal(len(s.animals), randName())
+func (s *Sector) NewAnimal(name string) *Animal {
+	return NewAnimal(len(s.animals), s.area.animalType, name)
+}
+
+func (s *Sector) NewRandomAnimal() *Animal {
+	return s.NewAnimal(randName())
 }
 
 func randName() string {
@@ -40,10 +44,19 @@ func randName() string {
 	return string(b)
 }
 
-func (s *Sector) GetAnimalIndex(an *Animal) int {
-	for index, currentAnimal := range s.animals {
+func (s *Sector) ContainsAnimal(an *Animal) bool {
+	for _, currentAnimal := range s.animals {
 		if an == currentAnimal {
-			return index
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Sector) AnimalIndex(an *Animal) int {
+	for i, currentAnimal := range s.animals {
+		if an == currentAnimal {
+			return i
 		}
 	}
 	return -1
@@ -59,20 +72,18 @@ func (s *Sector) FindAnimalByName(name string) *Animal {
 }
 
 func (s *Sector) MoveAnimalToOtherSector(newSector *Sector, an *Animal) error {
-	oldIndex := s.GetAnimalIndex(an)
+	oldIndex := s.AnimalIndex(an)
 	if oldIndex == -1 {
 		return fmt.Errorf("previous sector doesn't contains such an animal")
 	}
 
-	newIndex := newSector.GetAnimalIndex(an)
+	newIndex := newSector.AnimalIndex(an)
 	if newIndex != -1 {
 		return fmt.Errorf("new sector already contains such an animal")
 	}
 
 	newSector.animals = append(newSector.animals, an)
 	s.animals = append(s.animals[:oldIndex], s.animals[oldIndex+1:]...)
-	newIndex = len(newSector.animals) - 1
 
-	fmt.Printf("Animal was moved from one sector to other: old index = %v, new index = %v \n", oldIndex, newIndex)
 	return nil
 }

@@ -17,11 +17,11 @@ func (us *UtilitySpace) Clean() {
 }
 
 func (us *UtilitySpace) Feed(an *Animal) error {
-	index := us.sector.GetAnimalIndex(an)
-	if index == -1 {
+	contains := us.sector.ContainsAnimal(an)
+	if !contains {
 		return fmt.Errorf("such an animal doesn't exist")
 	}
 
-	fmt.Printf("Feeding an animal with index: %v\n", index)
+	fmt.Println("Feeding an animal")
 	return nil
 }

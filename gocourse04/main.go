@@ -62,12 +62,12 @@ func main() {
 	}
 
 	for _, area := range zoo.areas {
-		sectorsAmount := rand.IntN(5) + 2
-		for i := 0; i < sectorsAmount; i++ {
+		sectorsCount := rand.IntN(5) + 2
+		for i := 0; i < sectorsCount; i++ {
 			sector := NewSector(area)
 			animalsCount := rand.IntN(10) + 1
 			for j := 0; j < animalsCount; j++ {
-				sector.GenerateAndAddAnimal()
+				sector.AddAnimal(sector.NewRandomAnimal())
 			}
 
 			area.sectors = append(area.sectors, sector)
@@ -80,7 +80,10 @@ func main() {
 	randBird := firstBirdsSector.animals[rand.IntN(len(firstBirdsSector.animals))]
 	firstBirdsSector.utilitySpace.Feed(randBird)
 	secondBirdsSector := birdsArea.sectors[1]
-	firstBirdsSector.MoveAnimalToOtherSector(secondBirdsSector, randBird)
+	err := firstBirdsSector.MoveAnimalToOtherSector(secondBirdsSector, randBird)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println("Done")
 }

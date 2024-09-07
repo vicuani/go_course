@@ -3,12 +3,11 @@ package main
 import "testing"
 
 func TestNewSector(t *testing.T) {
-	area := NewArea("fishes")
+	area := NewArea("reptiles")
 	sector := NewSector(area)
 
 	if sector == nil {
-		t.Error("Sector wasn't created")
-		return
+		t.Fatal("Sector wasn't created")
 	}
 
 	if sector.area != area {
@@ -20,23 +19,22 @@ func TestNewSector(t *testing.T) {
 	}
 }
 
-func TestCreateAndAddAnimal(t *testing.T) {
+func TestNewAnimal(t *testing.T) {
 	animalType := "fishes"
 	area := NewArea(animalType)
 	sector := NewSector(area)
 
 	id := 17
 	name := "Nemo"
-	sector.CreateAndAddAnimal(id, name)
+	sector.AddAnimal(NewAnimal(id, animalType, name))
 
 	if len(sector.animals) != 1 {
-		t.Error("Animal wasn't created and/or added")
+		t.Fatal("Animal wasn't created and/or added")
 	}
 
 	addedAnimal := sector.animals[0]
 	if addedAnimal == nil {
-		t.Error("Animal wasn't created")
-		return
+		t.Fatal("Animal wasn't created")
 	}
 
 	if addedAnimal.id != id {
@@ -52,40 +50,43 @@ func TestCreateAndAddAnimal(t *testing.T) {
 	}
 }
 
-func preconditions() *Sector {
-	const animalType string = "mammals"
-	area := NewArea(animalType)
+func TestFindAnimalByName(t *testing.T) {
+	area := NewArea("mammals")
 	sector := NewSector(area)
 
-	sector.CreateAndAddAnimal(0, "Jack")
-	sector.CreateAndAddAnimal(1, "Bob")
-	sector.CreateAndAddAnimal(2, "Carmen")
-	sector.CreateAndAddAnimal(3, "Emma")
+	sector.AddAnimal(sector.NewAnimal("Jack"))
+	sector.AddAnimal(sector.NewAnimal("Bob"))
+	sector.AddAnimal(sector.NewAnimal("Carmen"))
+	sector.AddAnimal(sector.NewAnimal("Emma"))
 
-	return sector
+	t.Run("positive", func(t *testing.T) {
+		animal := sector.FindAnimalByName("Carmen")
+		if animal == nil {
+			t.Error("Carmen should be found")
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		animal := sector.FindAnimalByName("Louise")
+		if animal != nil {
+			t.Error("Louise shouldn't be found")
+		}
+	})
 }
 
-func TestFindAnimalByName(t *testing.T) {
-	sector := preconditions()
+func TestAnimalIndex(t *testing.T) {
+	area := NewArea("birds")
+	sector := NewSector(area)
 
-	animal := sector.FindAnimalByName("Carmen")
-	if animal == nil {
-		t.Error("Carmen should be found")
-	}
-
-	animal = sector.FindAnimalByName("Louise")
-	if animal != nil {
-		t.Error("Louise shouldn't be found")
-	}
-}
-
-func TestGetAnimalIndex(t *testing.T) {
-	sector := preconditions()
+	sector.AddAnimal(sector.NewAnimal("Jack"))
+	sector.AddAnimal(sector.NewAnimal("Bob"))
+	sector.AddAnimal(sector.NewAnimal("Carmen"))
+	sector.AddAnimal(sector.NewAnimal("Emma"))
 
 	animal := sector.FindAnimalByName("Bob")
-	index := sector.GetAnimalIndex(animal)
+	index := sector.AnimalIndex(animal)
 
-	if index == - 1 {
+	if index == -1 {
 		t.Error("This animal shouldn't have index -1!")
 	}
 }
