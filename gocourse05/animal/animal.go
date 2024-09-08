@@ -41,15 +41,6 @@ func NewAnimal(id int) *Animal {
 	}
 }
 
-// only for test
-func (an *Animal) SetState(s AnimalState) {
-	an.state = s
-}
-
-func (an *Animal) State() AnimalState {
-	return an.state
-}
-
 func (an *Animal) SetRandomState() {
 	an.state = allAnimalStates[rand.IntN(len(allAnimalStates))]
 }

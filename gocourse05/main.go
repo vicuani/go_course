@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
+	"os"
 
 	"github.com/vicuani/go_course/gocourse05/animal"
 	"github.com/vicuani/go_course/gocourse05/camera"
@@ -79,5 +80,5 @@ func main() {
 
 	randEpisodeIndex := rand.IntN(movesCount)
 	fmt.Printf("\nGet history for the move: %v\n", randEpisodeIndex)
-	srv.PrintCompleteHistoryForID(randEpisodeIndex)
+	srv.PrintCompleteHistoryForID(randEpisodeIndex, os.Stdout)
 }

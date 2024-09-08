@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/vicuani/go_course/gocourse05/animal"
 )
@@ -66,19 +67,19 @@ func (s *Server) SendHistory(otherServer *Server) {
 	otherServer.dangerousHistory = s.dangerousHistory
 }
 
-func (s *Server) PrintCompleteHistoryForID(moveID int) {
+func (s *Server) PrintCompleteHistoryForID(moveID int, out io.Writer) error {
 	if moveID < 0 || moveID >= len(s.fullHistory) {
-		fmt.Printf("current move id (%v) is incorrect\n", moveID)
-		return
+		return fmt.Errorf("current move id (%v) is incorrect", moveID)
 	}
 
-	fmt.Println("\nFull history:")
+	fmt.Fprintln(out, "\nFull history:")
 	for _, episode := range s.fullHistory[moveID].GetData() {
-		fmt.Println(episode)
+		fmt.Fprintln(out, episode)
 	}
 
-	fmt.Println("\nDangerous history:")
+	fmt.Fprintln(out, "\nDangerous history:")
 	for _, episode := range s.dangerousHistory[moveID].GetData() {
-		fmt.Println(episode)
+		fmt.Fprintln(out, episode)
 	}
+	return nil
 }
