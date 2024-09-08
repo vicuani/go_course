@@ -1,7 +1,6 @@
 package centralsystem
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -17,27 +16,24 @@ func (cs *CentralSystem) DataSize() int {
 	return len(cs.data)
 }
 
-func (cs *CentralSystem) ProcessData(ctx context.Context, sensorChan <-chan sensor.SensorData, wg *sync.WaitGroup) {
+func (cs *CentralSystem) ProcessData(sensorChan <-chan sensor.SensorData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for {
 		select {
-		case <-ctx.Done():
-			fmt.Println("Received done signal, exiting from central system...")
-			return
 		case data, ok := <-sensorChan:
 			if !ok {
 				return
 			}
 			fmt.Printf("Central system: processed such a data: %v\n", data)
-			cs.WriteToDB(data)
+			cs.writeToDB(data)
 		default:
-			time.Sleep(time.Duration(time.Millisecond * time.Duration(10)))
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
 
-func (cs *CentralSystem) WriteToDB(data sensor.SensorData) {
+func (cs *CentralSystem) writeToDB(data sensor.SensorData) {
 	fmt.Printf("Starting writing data: %v to db...\n", data)
 	time.Sleep(100 * time.Millisecond)
 	cs.data = append(cs.data, data)

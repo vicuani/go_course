@@ -21,7 +21,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"math/rand/v2"
 	"sync"
@@ -50,8 +49,6 @@ func main() {
 		centralChan := make(chan sensor.SensorData, len(sensors)*maxIterations)
 
 		var sensorsWg sync.WaitGroup
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
 
 		fmt.Printf("\n*** Starting day #%v ****\n", i+1)
 		var dailyIterationsCount int
@@ -65,7 +62,7 @@ func main() {
 
 		var centralWg sync.WaitGroup
 		centralWg.Add(1)
-		go centralSystem.ProcessData(ctx, centralChan, &centralWg)
+		go centralSystem.ProcessData(centralChan, &centralWg)
 
 		sensorsWg.Wait()
 		close(centralChan)
