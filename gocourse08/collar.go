@@ -9,8 +9,7 @@ import (
 )
 
 type Collar struct {
-	dataMu sync.Mutex
-	data   *AnimalData
+	data *AnimalData
 
 	gprsSignalMu sync.Mutex
 	gprsSignal   bool
@@ -42,17 +41,12 @@ func (c *Collar) GPRSSignal() bool {
 func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	breathingSensor := BreathingSensor{}
-	soundSensor := SoundSensor{}
+	for range 10 {
+		c.breathingData(BreathingSensor{})
+		c.soundData(SoundSensor{})
 
-	for i := 0; i < 10; i++ {
-		c.breathingData(breathingSensor)
-		c.soundData(soundSensor)
-
-		c.dataMu.Lock()
 		c.data.timestamp = time.Now()
 		dataChan <- *c.data
-		c.dataMu.Unlock()
 
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -60,17 +54,11 @@ func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGrou
 }
 
 func (c *Collar) breathingData(sensor Sensor[int]) {
-	bData := sensor.GenerateData()
-	c.dataMu.Lock()
-	c.data.breaths = append(c.data.breaths, bData)
-	c.dataMu.Unlock()
+	c.data.breaths = append(c.data.breaths, sensor.GenerateData())
 }
 
 func (c *Collar) soundData(sensor Sensor[int]) {
-	sData := sensor.GenerateData()
-	c.dataMu.Lock()
-	c.data.sounds = append(c.data.sounds, sData)
-	c.dataMu.Unlock()
+	c.data.sounds = append(c.data.sounds, sensor.GenerateData())
 }
 
 func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData) {

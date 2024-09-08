@@ -15,8 +15,8 @@ func SimulateGPRSSignal(collar *Collar, wg *sync.WaitGroup) {
 		fmt.Println("Set GPRS signal to false")
 		collar.SetGPRSSignal(false)
 
-		absenseTime := rand.IntN(100) + 50
-		time.Sleep(time.Millisecond * time.Duration(absenseTime))
+		absenceTime := rand.IntN(100) + 50
+		time.Sleep(time.Millisecond * time.Duration(absenceTime))
 
 		fmt.Println("Set GPRS signal to true")
 		collar.SetGPRSSignal(true)
