@@ -11,7 +11,7 @@ const (
 	daysCount   = 8
 )
 
-type observer interface {
+type eater interface {
 	eat([]food)
 }
 
@@ -40,15 +40,6 @@ func generateWeekendFood() []food {
 	}
 }
 
-func generateAnimals(lChan chan string) []*animal {
-	var animals []*animal
-	for i := range animalCount {
-		animals = append(animals, newAnimal(i, lChan))
-	}
-
-	return animals
-}
-
 func main() {
 	fdr := feeder{
 		ordinaryFood: generateOrdinaryFood(),
@@ -56,9 +47,8 @@ func main() {
 	}
 
 	lChan := make(chan string)
-	animals := generateAnimals(lChan)
-	for _, an := range animals {
-		fdr.addObserver(an)
+	for i := range animalCount {
+		fdr.addEater(newAnimal(i, lChan))
 	}
 
 	nextDay := func(day time.Time) time.Time {
@@ -66,6 +56,7 @@ func main() {
 	}
 
 	d := time.Now()
+	last := d.AddDate(0, 0, daysCount)
 	strategist := newStrategist(&fdr)
 	fdr.setStrategy(strategist.getCorrectStrategy(d.Weekday()))
 
@@ -74,7 +65,7 @@ func main() {
 	wg.Add(1)
 	go logger.printLogs(lChan, &wg)
 
-	for range daysCount {
+	for ; d.Before(last); d = nextDay(d) {
 		fmt.Printf("\nCurrent weekday is %v\n", d.Weekday())
 
 		strategy := strategist.getCorrectStrategy(d.Weekday())
@@ -83,7 +74,6 @@ func main() {
 		}
 
 		fdr.feedAll()
-		d = nextDay(d)
 	}
 	close(lChan)
 

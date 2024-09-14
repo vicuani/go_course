@@ -13,10 +13,8 @@ func TestGetCorrectStrategy(t *testing.T) {
 
 	strategist := newStrategist(&fdr)
 
-	weekdays := []time.Weekday{time.Monday, time.Tuesday, time.Wednesday}
-	weekends := []time.Weekday{time.Saturday, time.Sunday}
-
 	t.Run("weekdays", func(t *testing.T) {
+		weekdays := []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday}
 		for _, day := range weekdays {
 			strategy := strategist.getCorrectStrategy(day)
 			food := strategy.getFood()
@@ -28,6 +26,7 @@ func TestGetCorrectStrategy(t *testing.T) {
 	})
 
 	t.Run("weekends", func(t *testing.T) {
+		weekends := []time.Weekday{time.Saturday, time.Sunday}
 		for _, day := range weekends {
 			strategy := strategist.getCorrectStrategy(day)
 			food := strategy.getFood()

@@ -3,17 +3,17 @@ package main
 import "fmt"
 
 type animal struct {
-	id    int
-	lChan chan string
+	id      int
+	logChan chan string
 }
 
-func newAnimal(id int, lChan chan string) *animal {
-	return &animal{id: id, lChan: lChan}
+func newAnimal(id int, logChan chan string) *animal {
+	return &animal{id: id, logChan: logChan}
 }
 
 func (an *animal) eat(f []food) {
 	for _, cf := range f {
 		res := fmt.Sprintf("Animal #%v ate: %v, calories: %v", an.id, cf.name(), cf.calories())
-		an.lChan <- res
+		an.logChan <- res
 	}
 }

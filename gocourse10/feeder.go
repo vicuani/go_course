@@ -4,17 +4,17 @@ type feeder struct {
 	ordinaryFood []food
 	weekendFood  []food
 
-	observers []observer
-	fs        feedingStrategy
+	eaters []eater
+	fs     feedingStrategy
 }
 
-func (cs *feeder) addObserver(o observer) {
-	cs.observers = append(cs.observers, o)
+func (cs *feeder) addEater(o eater) {
+	cs.eaters = append(cs.eaters, o)
 }
 
 func (cs *feeder) feedAll() {
-	for _, observer := range cs.observers {
-		observer.eat(cs.fs.getFood())
+	for _, eater := range cs.eaters {
+		eater.eat(cs.fs.getFood())
 	}
 }
 

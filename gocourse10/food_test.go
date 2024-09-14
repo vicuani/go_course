@@ -4,21 +4,19 @@ import (
 	"testing"
 )
 
-func TestSandwichCalories(t *testing.T) {
-	br := bread{}
-	bu := butter{}
-	s := sandwich{br: br, bu: bu}
-
-	expectedCalories := br.calories() + bu.calories()
-	if s.calories() != expectedCalories {
-		t.Errorf("Expected sandwich calories: %d, got: %d", expectedCalories, s.calories())
+func TestCheeseSandwichCalories(t *testing.T) {
+	cs := cheeseSandwich{
+		s: sandwich{
+			br: bread{},
+			bu: butter{},
+		},
+		ch: cheese{},
 	}
+	const expected = 1350
 
-	ch := cheese{}
-	cs := cheeseSandwich{s: s, ch: ch}
+	got := cs.calories()
 
-	expectedCheeseSandwichCalories := s.calories() + ch.calories()
-	if cs.calories() != expectedCheeseSandwichCalories {
-		t.Errorf("Expected cheese sandwich calories: %d, got: %d", expectedCheeseSandwichCalories, cs.calories())
+	if expected != got {
+		t.Errorf("Expected cheese sandwich calories: %d, got: %d", expected, got)
 	}
 }

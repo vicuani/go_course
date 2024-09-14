@@ -16,7 +16,7 @@ func TestFeederObservers(t *testing.T) {
 	}
 
 	for _, an := range animals {
-		fdr.addObserver(an)
+		fdr.addEater(an)
 	}
 
 	strategy := &ordinaryFeedingStrategy{fdr: &fdr}
