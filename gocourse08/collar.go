@@ -3,80 +3,84 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand/v2"
+	"log/slog"
 	"sync"
 	"time"
 )
 
 type Collar struct {
-	data *AnimalData
+	pulse       int
+	temperature float64
 
 	gprsSignalMu sync.Mutex
 	gprsSignal   bool
 
 	storedDataMu sync.Mutex
 	storedData   []*AnimalData
+
+	logger *slog.Logger
 }
 
-func NewCollar() *Collar {
+func NewCollar(pulse int, temperature float64, logger *slog.Logger) *Collar {
 	return &Collar{
-		data:       NewAnimalData(rand.IntN(50)+30, float64(rand.IntN(10)+32)),
-		gprsSignal: false,
+		pulse:       pulse,
+		temperature: temperature,
+		gprsSignal:  false,
+		logger:      logger,
 	}
 }
 
-func (c *Collar) SetGPRSSignal(v bool) {
+func (c *Collar) FoundGPRSSignal() {
 	c.gprsSignalMu.Lock()
-	c.gprsSignal = v
+	c.gprsSignal = true
 	c.gprsSignalMu.Unlock()
 }
 
-func (c *Collar) GPRSSignal() bool {
+func (c *Collar) LostGPRSSignal() {
+	c.gprsSignalMu.Lock()
+	c.gprsSignal = false
+	c.gprsSignalMu.Unlock()
+}
+
+func (c *Collar) HasGPRSSignal() bool {
 	defer c.gprsSignalMu.Unlock()
 
 	c.gprsSignalMu.Lock()
 	return c.gprsSignal
 }
 
-func (c *Collar) CollectSensorData(dataChan chan<- AnimalData, wg *sync.WaitGroup) {
+func (c *Collar) CollectSensorData(collectDataCount int, dataChan chan<- AnimalData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for range 10 {
-		c.breathingData(BreathingSensor{})
-		c.soundData(SoundSensor{})
+	data := NewAnimalData(c.pulse, c.temperature)
+	for range collectDataCount {
+		data.breaths = append(data.breaths, BreathingSensor{}.Measure())
+		data.sounds = append(data.sounds, SoundSensor{}.Measure())
 
-		c.data.timestamp = time.Now()
-		dataChan <- *c.data
+		data.timestamp = time.Now()
+		dataChan <- *data
 
 		time.Sleep(500 * time.Millisecond)
 	}
 	close(dataChan)
 }
 
-func (c *Collar) breathingData(sensor Sensor[int]) {
-	c.data.breaths = append(c.data.breaths, sensor.GenerateData())
-}
-
-func (c *Collar) soundData(sensor Sensor[int]) {
-	c.data.sounds = append(c.data.sounds, sensor.GenerateData())
-}
-
 func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Received done signal, exiting from transmit data...")
+			c.logger.Info("Received done signal, exiting from transmit data...")
 			return
 		case data, ok := <-dataChan:
 			if !ok {
 				return
 			}
 
-			if c.GPRSSignal() {
-				fmt.Printf("Transmit data: %v to server...\n", data)
+			if c.HasGPRSSignal() {
+				c.logger.Info(fmt.Sprintf("Transmit data: %v to server...", data))
 				c.TransmitStoredData()
 			} else {
-				fmt.Printf("Store data: %v to internal memory...\n", data)
+				c.logger.Info(fmt.Sprintf("Store data: %v to internal memory...", data))
 				c.storedDataMu.Lock()
 				c.storedData = append(c.storedData, &data)
 				c.storedDataMu.Unlock()
@@ -90,7 +94,7 @@ func (c *Collar) TransmitStoredData() {
 
 	c.storedDataMu.Lock()
 	for _, storedData := range c.storedData {
-		fmt.Printf("Transmit stored data: %v to server...\n", storedData)
+		c.logger.Info(fmt.Sprintf("Transmit stored data: %v to server...", storedData))
 	}
 	c.storedData = nil
 }

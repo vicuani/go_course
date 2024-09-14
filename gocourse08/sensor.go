@@ -7,17 +7,17 @@ import (
 )
 
 type Sensor[T constraints.Integer] interface {
-	GenerateData() T
+	Measure() T
 }
 
 type BreathingSensor struct{}
 
-func (s BreathingSensor) GenerateData() int {
+func (s BreathingSensor) Measure() int {
 	return rand.IntN(100)
 }
 
 type SoundSensor struct{}
 
-func (s SoundSensor) GenerateData() int {
+func (s SoundSensor) Measure() int {
 	return rand.IntN(200)
 }
