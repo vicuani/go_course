@@ -2,6 +2,7 @@ package feeder
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/vicuani/go_course/gocourse09/animal"
@@ -12,14 +13,24 @@ type FoodBracket struct {
 	amount     int
 }
 
+type FeederInterface interface {
+	Stock() int
+	SetStock(int)
+	Feed(chan<- bool, []animal.AnimalInterface)
+	Refill(int)
+}
+
 type Feeder struct {
 	stockMu sync.Mutex
 	stock   int
+
+	logger *slog.Logger
 }
 
-func NewFeeder(initialStock int) *Feeder {
+func NewFeeder(initialStock int, logger *slog.Logger) *Feeder {
 	return &Feeder{
-		stock: initialStock,
+		stock:  initialStock,
+		logger: logger,
 	}
 }
 
@@ -36,36 +47,37 @@ func (fd *Feeder) SetStock(v int) {
 	fd.stockMu.Unlock()
 }
 
-func (fd *Feeder) Feed(lsChan chan<- bool, animals []*animal.Animal) {
+func (fd *Feeder) Feed(lowStockChan chan<- bool, animals []animal.AnimalInterface) {
 	for _, an := range animals {
 		food := fd.calculateFood(an)
 		if fd.Stock() >= food.amount {
 			fd.SetStock(fd.Stock() - food.amount)
-			fmt.Printf("Giving %v bracket counts for %s. Left: %v\n", food.amount, an.Type, fd.Stock())
+			fd.logger.Info(fmt.Sprintf("Giving %v bracket counts for %s. Left: %v", food.amount, an.Type(), fd.Stock()))
 		} else {
-			fmt.Println("Not enouch brackets! Need to refill")
-			lsChan <- true
+			fd.logger.Info("Not enough brackets! Need to refill")
+			lowStockChan <- true
 			break
 		}
 	}
 }
 
-func (fd *Feeder) calculateFood(an *animal.Animal) FoodBracket {
+func (fd *Feeder) calculateFood(an animal.AnimalInterface) FoodBracket {
 	amount := 0
-	switch an.Type {
+	switch an.Type() {
 	case animal.Bear:
-		amount = 6 * an.Weight / 100
+		amount = 6 * an.Weight()
 	case animal.Deer:
-		amount = 4 * an.Weight / 100
+		amount = 4 * an.Weight()
 	case animal.Lion:
-		amount = 4 * an.Weight / 100
+		amount = 4 * an.Weight()
 	case animal.Wolf:
-		amount = 2 * an.Weight / 100
+		amount = 2 * an.Weight()
 	}
-	return FoodBracket{animalType: an.Type, amount: amount}
+	amount /= 100
+	return FoodBracket{animalType: an.Type(), amount: amount}
 }
 
 func (fd *Feeder) Refill(amount int) {
 	fd.SetStock(fd.Stock() + amount)
-	fmt.Printf("Feeder refilled for %v brackets. Left: %v\n", amount, fd.Stock())
+	fd.logger.Info(fmt.Sprintf("Feeder refilled for %v brackets. Left: %v", amount, fd.Stock()))
 }

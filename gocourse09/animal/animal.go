@@ -11,10 +11,17 @@ const (
 	Wolf AnimalType = "Wolf"
 )
 
+type AnimalInterface interface {
+	InZone() bool
+	SetInZone(bool)
+	Type() AnimalType
+	Weight() int
+}
+
 type Animal struct {
 	ID     int
-	Type   AnimalType
-	Weight int
+	anType AnimalType
+	weight int
 
 	inZoneMu sync.Mutex
 	inZone   bool
@@ -22,17 +29,8 @@ type Animal struct {
 
 func NewAnimal(anType AnimalType, weight int) *Animal {
 	return &Animal{
-		Type:   anType,
-		Weight: weight,
-	}
-}
-
-func GenerateAnimals() []*Animal {
-	return []*Animal{
-		NewAnimal(Bear, 200),
-		NewAnimal(Deer, 120),
-		NewAnimal(Lion, 150),
-		NewAnimal(Wolf, 50),
+		anType: anType,
+		weight: weight,
 	}
 }
 
@@ -49,13 +47,21 @@ func (an *Animal) SetInZone(v bool) {
 	an.inZoneMu.Unlock()
 }
 
-type AnimalDetector struct{}
+func (an *Animal) Type() AnimalType {
+	return an.anType
+}
 
-func (ad *AnimalDetector) Detect(zone *Zone) []*Animal {
-	zone.mu.Lock()
-	defer zone.mu.Unlock()
+func (an *Animal) Weight() int {
+	return an.weight
+}
 
-	var detectedAnimals []*Animal
+type Detector struct{}
+
+func (ad *Detector) Detect(zone *Zone) []AnimalInterface {
+	zone.animalsMu.Lock()
+	defer zone.animalsMu.Unlock()
+
+	var detectedAnimals []AnimalInterface
 	for _, animal := range zone.Animals {
 		if animal.InZone() {
 			detectedAnimals = append(detectedAnimals, animal)
@@ -65,10 +71,6 @@ func (ad *AnimalDetector) Detect(zone *Zone) []*Animal {
 }
 
 type Zone struct {
-	Animals []*Animal
-	mu      sync.Mutex
-}
-
-func GenerateZone() *Zone {
-	return &Zone{Animals: GenerateAnimals()}
+	Animals   []AnimalInterface
+	animalsMu sync.Mutex
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
+	"os"
 	"sync"
 	"time"
 
@@ -12,18 +14,20 @@ import (
 
 const locationIterations = 10
 
-func simulateAnimalLocations(fChan chan<- bool, zone *animal.Zone, wg *sync.WaitGroup) {
+var logger *slog.Logger
+
+func simulateAnimalLocations(feederChan chan<- bool, zone *animal.Zone, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for i := 0; i < locationIterations; i++ {
-		fmt.Printf("\nLocation iteration #%v\n", i)
+	for i := range locationIterations {
+		logger.Info(fmt.Sprintf("Location iteration #%v", i))
 		needToFeed := false
 		for _, an := range zone.Animals {
 			inZone := rand.IntN(2) == 1
 			if inZone != an.InZone() {
 				if inZone {
-					fmt.Printf("%s appeared in zone\n", an.Type)
+					logger.Info(fmt.Sprintf("%s appeared in zone", an.Type()))
 				} else {
-					fmt.Printf("%s left the zone\n", an.Type)
+					logger.Info(fmt.Sprintf("%s left the zone", an.Type()))
 				}
 				an.SetInZone(inZone)
 				needToFeed = true
@@ -31,22 +35,22 @@ func simulateAnimalLocations(fChan chan<- bool, zone *animal.Zone, wg *sync.Wait
 		}
 
 		if needToFeed {
-			fChan <- true
+			feederChan <- true
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(rand.IntN(100)+100))
 	}
-	close(fChan)
+	close(feederChan)
 }
 
-func handleRefiller(lsChan chan bool, f *feeder.Feeder, wg *sync.WaitGroup) {
+func handleRefiller(lowStockChan chan bool, f feeder.FeederInterface, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for {
 		select {
-		case _, ok := <-lsChan:
+		case _, ok := <-lowStockChan:
 			if !ok {
-				fmt.Println("Low stock channel is closed, exiting from handleRefiller...")
+				logger.Info("Low stock channel is closed, exiting from handleRefiller...")
 				return
 			}
 
@@ -58,21 +62,21 @@ func handleRefiller(lsChan chan bool, f *feeder.Feeder, wg *sync.WaitGroup) {
 	}
 }
 
-func handleFeeder(lsChan chan bool, fChan <-chan bool, f *feeder.Feeder, zone *animal.Zone, wg *sync.WaitGroup) {
+func handleFeeder(lowStockChan chan bool, feederChan <-chan bool, f feeder.FeederInterface, zone *animal.Zone, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	d := &animal.AnimalDetector{}
+	d := &animal.Detector{}
 	for {
 		select {
-		case _, ok := <-fChan:
+		case _, ok := <-feederChan:
 			if !ok {
-				fmt.Println("Feeder channel is closed, exiting from handleFeeder...")
-				close(lsChan)
+				logger.Info("Feeder channel is closed, exiting from handleFeeder...")
+				close(lowStockChan)
 				return
 			}
 
 			ans := d.Detect(zone)
-			f.Feed(lsChan, ans)
+			f.Feed(lowStockChan, ans)
 
 		default:
 			time.Sleep(time.Millisecond * time.Duration(rand.IntN(50)+50))
@@ -80,22 +84,37 @@ func handleFeeder(lsChan chan bool, fChan <-chan bool, f *feeder.Feeder, zone *a
 	}
 }
 
-func main() {
-	zone := animal.GenerateZone()
+func GenerateAnimals() []animal.AnimalInterface {
+	return []animal.AnimalInterface{
+		animal.NewAnimal(animal.Bear, 200),
+		animal.NewAnimal(animal.Deer, 120),
+		animal.NewAnimal(animal.Lion, 150),
+		animal.NewAnimal(animal.Wolf, 50),
+	}
+}
 
-	fChan := make(chan bool, locationIterations)
-	lsChan := make(chan bool)
+func GenerateZone() *animal.Zone {
+	return &animal.Zone{Animals: GenerateAnimals()}
+}
+
+func main() {
+	logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+
+	zone := GenerateZone()
+
+	feederChan := make(chan bool, locationIterations)
+	lowStockChan := make(chan bool)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go simulateAnimalLocations(fChan, zone, &wg)
+	go simulateAnimalLocations(feederChan, zone, &wg)
 
-	f := feeder.NewFeeder(50)
+	f := feeder.NewFeeder(50, logger)
 	wg.Add(1)
-	go handleRefiller(lsChan, f, &wg)
+	go handleRefiller(lowStockChan, f, &wg)
 
 	wg.Add(1)
-	go handleFeeder(lsChan, fChan, f, zone, &wg)
+	go handleFeeder(lowStockChan, feederChan, f, zone, &wg)
 
 	wg.Wait()
 }
