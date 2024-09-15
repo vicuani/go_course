@@ -6,8 +6,8 @@ type AnimalData struct {
 	animalType  string
 	pulse       int
 	temperature float64
-	breaths     []int
-	sounds      []int
+	breath     int
+	sound      int
 	timestamp   time.Time
 }
 

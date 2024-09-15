@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -54,8 +53,8 @@ func (c *Collar) CollectSensorData(collectDataCount int, dataChan chan<- AnimalD
 
 	data := NewAnimalData(c.pulse, c.temperature)
 	for range collectDataCount {
-		data.breaths = append(data.breaths, BreathingSensor{}.Measure())
-		data.sounds = append(data.sounds, SoundSensor{}.Measure())
+		data.breath = BreathingSensor{}.Measure()
+		data.sound = SoundSensor{}.Measure()
 
 		data.timestamp = time.Now()
 		dataChan <- *data
@@ -77,10 +76,10 @@ func (c *Collar) TransmitData(ctx context.Context, dataChan <-chan AnimalData) {
 			}
 
 			if c.HasGPRSSignal() {
-				c.logger.Info(fmt.Sprintf("Transmit data: %v to server...", data))
+				c.logger.Info("Transmit data to server...", "data", data)
 				c.TransmitStoredData()
 			} else {
-				c.logger.Info(fmt.Sprintf("Store data: %v to internal memory...", data))
+				c.logger.Info("Store data to internal memory...", "data", data)
 				c.storedDataMu.Lock()
 				c.storedData = append(c.storedData, &data)
 				c.storedDataMu.Unlock()
@@ -94,7 +93,7 @@ func (c *Collar) TransmitStoredData() {
 
 	c.storedDataMu.Lock()
 	for _, storedData := range c.storedData {
-		c.logger.Info(fmt.Sprintf("Transmit stored data: %v to server...", storedData))
+		c.logger.Info("Transmit stored data to server...", "data", storedData)
 	}
 	c.storedData = nil
 }

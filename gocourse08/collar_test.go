@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"math/rand/v2"
 	"os"
@@ -10,8 +11,7 @@ import (
 )
 
 func TestFoundGPRSSignal(t *testing.T) {
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	collar := NewCollar(rand.IntN(50)+30, float64(rand.IntN(10)+32), logger)
+	collar := NewCollar(60, 37.5, slog.New(slog.NewTextHandler(io.Discard, nil)))
 
 	collar.FoundGPRSSignal()
 	if !collar.HasGPRSSignal() {
@@ -20,8 +20,7 @@ func TestFoundGPRSSignal(t *testing.T) {
 }
 
 func TestLostGPRSSignal(t *testing.T) {
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	collar := NewCollar(rand.IntN(50)+30, float64(rand.IntN(10)+32), logger)
+	collar := NewCollar(60, 37.5, slog.New(slog.NewTextHandler(io.Discard, nil)))
 
 	collar.LostGPRSSignal()
 	if collar.HasGPRSSignal() {
@@ -49,7 +48,7 @@ func TestCollectSensorData(t *testing.T) {
 	}
 
 	if count != collectDataCount {
-		t.Errorf("Expected 10 data points, got %d", count)
+		t.Errorf("Expected %v data points, got %d", collectDataCount, count)
 	}
 }
 
