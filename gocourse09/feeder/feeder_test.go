@@ -31,7 +31,7 @@ func TestFeeder_CalculateFood(t *testing.T) {
 	deer := animal.NewAnimal(animal.Deer, 120)
 	bracket := f.calculateFood(deer)
 
-	if bracket.amount != 4*deer.Weight()/100 {
-		t.Errorf("Expected amount to be %v, but got %v", 4*deer.Weight()/100, bracket.amount)
+	if bracket.amount != 4 {
+		t.Errorf("Expected amount to be 4, but got %v", bracket.amount)
 	}
 }

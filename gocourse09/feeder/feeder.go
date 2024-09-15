@@ -1,8 +1,8 @@
 package feeder
 
 import (
-	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 
 	"github.com/vicuani/go_course/gocourse09/animal"
@@ -52,7 +52,7 @@ func (fd *Feeder) Feed(lowStockChan chan<- bool, animals []animal.AnimalInterfac
 		food := fd.calculateFood(an)
 		if fd.Stock() >= food.amount {
 			fd.SetStock(fd.Stock() - food.amount)
-			fd.logger.Info(fmt.Sprintf("Giving %v bracket counts for %s. Left: %v", food.amount, an.Type(), fd.Stock()))
+			fd.logger.Info("Feeding animal:", "animal type", an.Type(), "brackets count:", strconv.Itoa(food.amount), "left:", strconv.Itoa((fd.Stock())))
 		} else {
 			fd.logger.Info("Not enough brackets! Need to refill")
 			lowStockChan <- true
@@ -79,5 +79,5 @@ func (fd *Feeder) calculateFood(an animal.AnimalInterface) FoodBracket {
 
 func (fd *Feeder) Refill(amount int) {
 	fd.SetStock(fd.Stock() + amount)
-	fd.logger.Info(fmt.Sprintf("Feeder refilled for %v brackets. Left: %v", amount, fd.Stock()))
+	fd.logger.Info("Feeder refilled for:", "brackets count:", strconv.Itoa(amount), "left:", strconv.Itoa(fd.Stock()))
 }
