@@ -1,59 +1,64 @@
 package animal
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+	"sync"
+)
 
-const FeederCapacity = 100.0
+const FeederCapacity = 100
 
 type Feeder struct {
-	ID     int
-	busy   bool
-	volume float64
+	ID int
+
+	parametersMu sync.Mutex
+	volume       int
+
+	logger *slog.Logger
 }
 
-func NewFeeder(id int) *Feeder {
+func NewFeeder(id int, logger *slog.Logger) *Feeder {
 	return &Feeder{
 		ID:     id,
-		busy:   false,
 		volume: FeederCapacity,
+		logger: logger,
 	}
 }
 
-func GenerateFeeders(n int) []*Feeder {
-	var feeders []*Feeder
-	for i := 0; i < n; i++ {
-		feeder := NewFeeder(i)
-		feeders = append(feeders, feeder)
-	}
-	return feeders
+func (f *Feeder) String() string {
+	return fmt.Sprintf("id = %v, volume = %v", f.ID, f.Volume())
 }
 
-func (f *Feeder) free() {
-	f.busy = false
+func (f *Feeder) Volume() int {
+	defer f.parametersMu.Unlock()
+
+	f.parametersMu.Lock()
+	return f.volume
 }
 
-func (f *Feeder) Refill() {
-	f.volume = FeederCapacity
-}
-
-func (f *Feeder) IsBusy() bool {
-	return f.busy
+func (f *Feeder) SetVolume(v int) {
+	f.parametersMu.Lock()
+	f.volume = v
+	f.parametersMu.Unlock()
 }
 
 func (f *Feeder) IsEmpty() bool {
-	return f.volume == 0.0
+	return f.Volume() == 0
 }
 
-func (f *Feeder) CanBeUsed() bool {
-	return !f.IsBusy() && !f.IsEmpty()
+func (f *Feeder) Refill() {
+	f.SetVolume(FeederCapacity)
 }
 
-func (f *Feeder) Feed(an *Animal) error {
-	defer f.free()
-
-	if !f.CanBeUsed() {
-		return fmt.Errorf("animal #%v cannot eat from feeder #%v", an.ID, f.ID)
+func (f *Feeder) Feed(an *Animal) bool {
+	if f.IsEmpty() {
+		f.logger.Info("Feeder cannot feed animal, it's empty", "id", f.ID)
+		return false
 	}
 
-	f.busy = true
-	return an.eat(f)
+	eaten := min(MaxIndicatorValue-an.Satiety(), f.Volume())
+	an.eat(eaten)
+	f.SetVolume(f.Volume() - eaten)
+	f.logger.Info("Feeder", "id", f.ID, "feed animal", an.ID, "left volume", f.Volume())
+	return true
 }

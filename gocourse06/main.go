@@ -52,210 +52,132 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
+	"log/slog"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/vicuani/go_course/gocourse06/animal"
 )
 
-const iterationsCount = 10
+const (
+	iterationsCount     = 10
+	maxEnclosuresAccess = 5
+	animalCount         = 20
+	feedersCount        = 3
+)
 
-const animalCount = 10
-const feedersCount = 3
-const maxEnclosuresAccess = 5
+var logger *slog.Logger
 
 type EnclosureRequest struct {
-	AnimalID     int
-	IsOpenAction bool
-	RespCh       chan bool
+	animalID     int
+	isOpenAction bool
+	respChan     chan bool
 }
 
-func enclosureController(reqCh <-chan EnclosureRequest, wg *sync.WaitGroup) {
+func enclosureController(enclosureReqChan <-chan EnclosureRequest, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	accessCount := 0
-	for req := range reqCh {
-		if req.IsOpenAction {
+	for req := range enclosureReqChan {
+		if req.isOpenAction {
 			if accessCount < maxEnclosuresAccess {
 				accessCount++
-				req.RespCh <- true
-				fmt.Printf("Access granted to enclosure for animal #%d (current accesses: %d)\n", req.AnimalID, accessCount)
+				req.respChan <- true
+				logger.Info("Access granted to enclosure for animal", "id", req.animalID, "current accesses", accessCount)
 			} else {
-				req.RespCh <- false
-				fmt.Printf("Access denied to enclosure for animal #%d, limit reached\n", req.AnimalID)
+				req.respChan <- false
+				logger.Info("Access denied to enclosure (limit reached) for animal", "id", req.animalID)
 			}
 		} else {
 			accessCount--
-			fmt.Printf("Enclosure closed by animal #%d (current accesses: %d)\n", req.AnimalID, accessCount)
+			logger.Info("Enclosure closed by animal", "id", req.animalID, "current accesses", accessCount)
 		}
 	}
 }
 
-func emulateAnimalChanges(an *animal.Animal, anCh chan<- *animal.Animal, logCh chan<- string, enclosureReqCh chan<- EnclosureRequest, wg *sync.WaitGroup) {
+func emulateAnimalChanges(an *animal.Animal, animalChan chan<- *animal.Animal, enclosureReqCh chan<- EnclosureRequest, logChan chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for range iterationsCount {
+	for i := range iterationsCount {
+		logger.Info("*** Iteration", "#", i, "for animal", an.ID)
 		an.RandomlyChangeIndicators()
-
 		if an.IsHungry() {
+
 			respCh := make(chan bool)
 			enclosureReqCh <- EnclosureRequest{
-				AnimalID:     an.ID,
-				IsOpenAction: true,
-				RespCh:       respCh,
+				animalID:     an.ID,
+				isOpenAction: true,
+				respChan:     respCh,
 			}
 			accessGranted := <-respCh
+			close(respCh)
 
 			if accessGranted {
-				anCh <- an
-				logCh <- fmt.Sprintf("Animal #%v is hungry and got access to the enclosure, satiety = %v\n", an.ID, an.Satiety)
-
 				enclosureReqCh <- EnclosureRequest{
-					AnimalID:     an.ID,
-					IsOpenAction: false,
+					animalID:     an.ID,
+					isOpenAction: false,
 				}
+
+				animalChan <- an
 			} else {
-				logCh <- fmt.Sprintf("Animal #%v is hungry but access to the enclosure was denied, satiety = %v\n", an.ID, an.Satiety)
+				logChan <- fmt.Sprintf("Animal #%v is hungry but access to the enclosure was denied, satiety = %v\n", an.ID, an.Satiety())
 			}
-		}
 
+		}
 		if an.HasCriticalValues() {
-			logCh <- fmt.Sprintf("Animal #%v has critical value(s): health = %v, mood = %v, satiety = %v\n", an.ID, an.Health, an.Mood, an.Satiety)
+			logChan <- string("animal has critical values:" + an.String())
 		}
-
-		time.Sleep(time.Duration(time.Millisecond * time.Duration(rand.IntN(100)+50)))
-	}
-}
-
-func handleFeeders(fCh chan *animal.Feeder, doneCh <-chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for {
-		select {
-		case f, ok := <-fCh:
-			if !ok {
-				return
-			}
-
-			if f.IsEmpty() {
-				f.Refill()
-				fmt.Printf("Check-up for feeder #%v, it is empty, refill it\n", f.ID)
-			}
-
-			fCh <- f
-		case <-doneCh:
-			fmt.Println("Received done signal, exiting handleFeeders...")
-			return
-		}
-		time.Sleep(time.Duration(time.Millisecond * time.Duration(10)))
-	}
-}
-
-func handleHunger(fCh chan *animal.Feeder, anCh <-chan *animal.Animal, logCh chan<- string, doneCh <-chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for {
-		select {
-		case an, ok := <-anCh:
-			if !ok {
-				return
-			}
-
-			fmt.Printf("Here are only hungry animals: #%v, satiety = %v\n", an.ID, an.Satiety)
-			if an.IsHungry() {
-				//	search for not empty feeder
-				for {
-					feeder, ok := <-fCh
-					if !ok {
-						return
-					}
-					feedRes := feeder.Feed(an)
-					if feedRes != nil {
-						logCh <- feedRes.Error()
-					} else {
-						fCh <- feeder
-						break
-					}
-					fCh <- feeder
-				}
-			}
-		case <-doneCh:
-			fmt.Println("Received done signal, exiting handleHunger...")
-			return
-		}
-	}
-}
-
-func mainMonitor(logCh <-chan string, doneCh <-chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for {
-		select {
-		case log, ok := <-logCh:
-			if !ok {
-				return
-			}
-			fmt.Printf("Log: %v\n", log)
-		case <-doneCh:
-			fmt.Println("Received done signal, exiting mainMonitor...")
-			return
-		}
+		time.Sleep(time.Duration(time.Millisecond * time.Duration(100)))
 	}
 }
 
 func main() {
-	animals := animal.GenerateAnimals(animalCount)
-	feeders := animal.GenerateFeeders(feedersCount)
+	logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 
-	fmt.Println("\nAnimals")
-	for _, an := range animals {
-		fmt.Println(*an)
-	}
-
-	fmt.Println("\nFeeders")
-	for _, f := range feeders {
-		fmt.Println(*f)
-	}
+	enclosureReqChan := make(chan EnclosureRequest)
+	animalChan := make(chan *animal.Animal, animalCount)
+	feederChan := make(chan *animal.Feeder)
+	logChan := make(chan string)
 
 	var wg sync.WaitGroup
-	var anWg sync.WaitGroup
-	doneCh := make(chan struct{})
-	anCh := make(chan *animal.Animal, animalCount)
-	enclosureReqCh := make(chan EnclosureRequest)
 
-	fCh := make(chan *animal.Feeder, len(feeders))
-	for _, f := range feeders {
-		fCh <- f
+	var animals []*animal.Animal
+	for i := 0; i < animalCount; i++ {
+		animals = append(animals, animal.NewAnimal(i, logger))
+	}
+
+	var feeders []*animal.Feeder
+	for i := 0; i < feedersCount; i++ {
+		feeder := animal.NewFeeder(i, logger)
+		feeders = append(feeders, feeder)
 	}
 
 	wg.Add(1)
-	go enclosureController(enclosureReqCh, &wg)
+	go monitorSystem(logChan, &wg)
 
 	wg.Add(1)
-	go handleFeeders(fCh, doneCh, &wg)
+	go handleFeeder(feederChan, &wg)
 
-	logCh := make(chan string)
 	wg.Add(1)
-	go mainMonitor(logCh, doneCh, &wg)
+	go handleHunger(feeders, animalChan, feederChan, &wg)
 
-	fmt.Println("Let's go...")
+	wg.Add(1)
+	go enclosureController(enclosureReqChan, &wg)
 
-	for _, an := range animals {
-		anWg.Add(1)
-		go func(an *animal.Animal) {
-			defer anWg.Done()
-			emulateAnimalChanges(an, anCh, logCh, enclosureReqCh, &wg)
-		}(an)
+	{
+		var animalWg sync.WaitGroup
+		for _, an := range animals {
+			animalWg.Add(1)
+			go emulateAnimalChanges(an, animalChan, enclosureReqChan, logChan, &animalWg)
+		}
+
+		animalWg.Wait()
+		close(animalChan)
+		close(enclosureReqChan)
+		close(logChan)
 	}
-
-	wg.Add(1)
-	go handleHunger(fCh, anCh, logCh, doneCh, &wg)
-
-	go func() {
-		anWg.Wait()
-		close(anCh)
-	}()
 
 	wg.Wait()
-	close(doneCh)
+	logger.Info("End")
 }

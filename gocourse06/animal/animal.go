@@ -2,92 +2,102 @@ package animal
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
+	"sync"
 )
 
-const MaxIndicatorValue = 100
-const IndicatorCoef = 30
-const CriticalIndicatorCoef = 10
-
-const MaxSatietyCoefDelta = 40
+const (
+	MaxIndicatorValue     = 100
+	IndicatorCoef         = 30
+	CriticalIndicatorCoef = 10
+	MaxSatietyCoefDelta   = 40
+)
 
 type Animal struct {
-	ID      int
-	Health  float64
-	Mood    float64
-	Satiety float64
-	busy    bool
+	ID int
+
+	indicatorsMu sync.Mutex
+	health       int
+	mood         int
+	satiety      int
+
+	logger *slog.Logger
 }
 
-func NewAnimal(id int) *Animal {
+func (an *Animal) String() string {
+	return fmt.Sprintf("id = %2v, health = %3v, mood = %3v, satiety = %3v", an.ID, an.Health(), an.Mood(), an.Satiety())
+}
+
+func NewAnimal(id int, logger *slog.Logger) *Animal {
 	return &Animal{
 		ID:      id,
-		Health:  MaxIndicatorValue,
-		Mood:    MaxIndicatorValue,
-		Satiety: MaxIndicatorValue,
-		busy:    false,
+		health:  MaxIndicatorValue,
+		mood:    MaxIndicatorValue,
+		satiety: MaxIndicatorValue,
+		logger:  logger,
 	}
 }
 
-func GenerateAnimals(n int) []*Animal {
-	var animals []*Animal
-	for i := 0; i < n; i++ {
-		animal := NewAnimal(i)
-		animals = append(animals, animal)
-	}
-	return animals
+func (an *Animal) Health() int {
+	defer an.indicatorsMu.Unlock()
+
+	an.indicatorsMu.Lock()
+	return an.health
 }
 
-func (an *Animal) HasCriticalValues() bool {
-	return an.Health < CriticalIndicatorCoef || an.Satiety < CriticalIndicatorCoef || an.Mood < CriticalIndicatorCoef
+func (an *Animal) SetHealth(v int) {
+	an.indicatorsMu.Lock()
+	an.health = v
+	an.indicatorsMu.Unlock()
+}
+
+func (an *Animal) Mood() int {
+	defer an.indicatorsMu.Unlock()
+
+	an.indicatorsMu.Lock()
+	return an.mood
+}
+
+func (an *Animal) SetMood(v int) {
+	an.indicatorsMu.Lock()
+	an.mood = v
+	an.indicatorsMu.Unlock()
+}
+
+func (an *Animal) Satiety() int {
+	defer an.indicatorsMu.Unlock()
+
+	an.indicatorsMu.Lock()
+	return an.satiety
+}
+
+func (an *Animal) SetSatiety(v int) {
+	an.indicatorsMu.Lock()
+	an.satiety = v
+	an.indicatorsMu.Unlock()
 }
 
 func (an *Animal) IsHungry() bool {
-	return an.Satiety < IndicatorCoef
+	return an.Satiety() < IndicatorCoef
 }
 
-func (an *Animal) IsBusy() bool {
-	return an.busy
-}
-
-func (an *Animal) free() {
-	an.busy = false
+func (an *Animal) HasCriticalValues() bool {
+	return an.Health() <= CriticalIndicatorCoef || an.Satiety() <= CriticalIndicatorCoef || an.Mood() <= CriticalIndicatorCoef
 }
 
 func (an *Animal) RandomlyChangeIndicators() {
-	if an.IsBusy() {
-		fmt.Printf("Cannot change indicators for animal #%v, it is busy\n", an.ID)
-		return
-	}
-
-	defer an.free()
-
-	an.busy = true
-	an.Health = float64(rand.IntN(MaxIndicatorValue) + 1)
-	an.Mood = float64(rand.IntN(MaxIndicatorValue) + 1)
+	an.SetHealth(rand.IntN(MaxIndicatorValue) + 1)
+	an.SetMood(rand.IntN(MaxIndicatorValue) + 1)
 
 	//	hunger is more linear
-	randDelta := float64(rand.IntN(int(MaxSatietyCoefDelta-10) + 10))
-	an.Satiety = max(CriticalIndicatorCoef, an.Satiety-randDelta)
+	randDelta := rand.IntN(MaxSatietyCoefDelta-10) + 10
+	an.SetSatiety(max(CriticalIndicatorCoef, an.Satiety()-randDelta))
 
-	fmt.Printf("Animal randomly changed it's values: %v, has critical values: %v\n", *an, an.HasCriticalValues())
+	an.logger.Info("Animal randomly changed it's values: ", "values", an, "is hungry:", an.IsHungry(), "has critical values: ", an.HasCriticalValues())
 }
 
-func (an *Animal) eat(f *Feeder) error {
-	if an.IsBusy() {
-		return fmt.Errorf("this animal #%v cannot eat, it is busy", an.ID)
-	}
-
-	if an.Satiety > IndicatorCoef {
-		return fmt.Errorf("this animal #%v is not yet hungry", an.ID)
-	}
-
-	defer an.free()
-
-	an.busy = true
-	eaten := min(MaxIndicatorValue-an.Satiety, f.volume)
-	an.Satiety += eaten
-	f.volume -= eaten
-	fmt.Printf("Animal #%v ate %v food from feeder #%v. Now it's satiety = %v, feeders volume = %v\n", an.ID, eaten, f.ID, an.Satiety, f.volume)
-	return nil
+func (an *Animal) eat(food int) {
+	an.logger.Info("Animal eats", "id", an.ID, "food amount", food)
+	an.SetSatiety(an.Satiety() + food)
 }
