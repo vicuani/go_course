@@ -14,13 +14,13 @@ func almostEqual(a, b float64) bool {
 }
 
 func TestAdjustFiltration(t *testing.T) {
-	aq := aquarium.NewAquariumBuilder().
+	aq := aquarium.NewBuilder().
 		SetSize(100).
 		SetAnimal("Fish").
 		SetFilterSpeed(1.5).
 		Build()
 
-	basicFilter := NewBasicFilter(aq)
+	basicFilter := NewBasic(aq)
 	pollutionLevel := 0.6
 
 	basicFilter.Adjust(pollutionLevel)
@@ -31,13 +31,13 @@ func TestAdjustFiltration(t *testing.T) {
 }
 
 func TestAddSalt(t *testing.T) {
-	aq := aquarium.NewAquariumBuilder().
+	aq := aquarium.NewBuilder().
 		SetSize(100).
 		SetSaltLevel(0.2).
 		SetContaminants(0.4).
 		Build()
 
-	basicFilter := NewBasicFilter(aq)
+	basicFilter := NewBasic(aq)
 	basicFilter.AddSalt()
 
 	expectedSalt := 3.2
@@ -47,13 +47,13 @@ func TestAddSalt(t *testing.T) {
 }
 
 func TestAddCleaners(t *testing.T) {
-	aq := aquarium.NewAquariumBuilder().
+	aq := aquarium.NewBuilder().
 		SetSize(200).
 		SetSaltLevel(0.1).
 		SetContaminants(0.5).
 		Build()
 
-	basicFilter := NewBasicFilter(aq)
+	basicFilter := NewBasic(aq)
 	basicFilter.AddCleaners()
 
 	expectedCleaners := 8.0

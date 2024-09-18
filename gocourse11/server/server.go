@@ -3,26 +3,35 @@ package server
 import (
 	"log/slog"
 
-	"github.com/vicuani/go_course/gocourse11/aquarium"
 	"github.com/vicuani/go_course/gocourse11/filter"
 )
 
+type Aquarium interface {
+	Size() int
+	Animal() string
+	SaltLevel() float64
+	Contaminants() float64
+	FilterSpeed() float64
+	Cleaners() float64
+
+	IncreaseFiltration(coef float64)
+	DecreaseFiltration(coef float64)
+	AddSalt(coef float64)
+	AddCleaners(coef float64)
+	CalculatePollution() float64
+}
+
 type Server struct {
-	Aquariums []aquarium.AquariumInterface
-	Filters   []filter.FilterSystem
+	filters   []filter.Filter
 }
 
-func (s *Server) AddAquarium(a aquarium.AquariumInterface) {
-	s.Aquariums = append(s.Aquariums, a)
-}
-
-func (s *Server) AddFilterSystem(f filter.FilterSystem) {
-	s.Filters = append(s.Filters, f)
+func (s *Server) AddFilter(f filter.Filter) {
+	s.filters = append(s.filters, f)
 }
 
 func (s *Server) MonitorAndFilter() {
-	for _, f := range s.Filters {
-		pollutionLevel := s.CalculatePollution(f.Aquarium())
+	for _, f := range s.filters {
+		pollutionLevel := f.Aquarium().CalculatePollution()
 
 		slog.Info("Monitoring aquarium",
 			"animal", f.Aquarium().Animal(),
@@ -33,8 +42,4 @@ func (s *Server) MonitorAndFilter() {
 		f.AddSalt()
 		f.AddCleaners()
 	}
-}
-
-func (s *Server) CalculatePollution(a aquarium.AquariumInterface) float64 {
-	return a.Contaminants() / float64(a.Size())
 }

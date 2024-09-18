@@ -2,12 +2,25 @@ package filter
 
 import (
 	"log/slog"
-
-	"github.com/vicuani/go_course/gocourse11/aquarium"
 )
 
-type FilterSystem interface {
-	Aquarium() aquarium.AquariumInterface
+type Aquarium interface {
+	Size() int
+	Animal() string
+	SaltLevel() float64
+	Contaminants() float64
+	FilterSpeed() float64
+	Cleaners() float64
+
+	IncreaseFiltration(coef float64)
+	DecreaseFiltration(coef float64)
+	AddSalt(coef float64)
+	AddCleaners(coef float64)
+	CalculatePollution() float64
+}
+
+type Filter interface {
+	Aquarium() Aquarium
 
 	Adjust(pollutionLevel float64)
 	AddSalt()
@@ -15,16 +28,16 @@ type FilterSystem interface {
 }
 
 type BasicFilter struct {
-	aq aquarium.AquariumInterface
+	aq Aquarium
 }
 
-func NewBasicFilter(aq aquarium.AquariumInterface) *BasicFilter {
+func NewBasic(aq Aquarium) *BasicFilter {
 	return &BasicFilter{
 		aq: aq,
 	}
 }
 
-func (f *BasicFilter) Aquarium() aquarium.AquariumInterface {
+func (f *BasicFilter) Aquarium() Aquarium {
 	return f.aq
 }
 

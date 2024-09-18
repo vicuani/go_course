@@ -1,19 +1,5 @@
 package aquarium
 
-type AquariumInterface interface {
-	Size() int
-	Animal() string
-	SaltLevel() float64
-	Contaminants() float64
-	FilterSpeed() float64
-	Cleaners() float64
-
-	IncreaseFiltration(coef float64)
-	DecreaseFiltration(coef float64)
-	AddSalt(coef float64)
-	AddCleaners(coef float64)
-}
-
 type Aquarium struct {
 	size         int
 	animal       string
@@ -63,6 +49,10 @@ func (aq *Aquarium) AddCleaners(coef float64) {
 	aq.cleaners += coef
 }
 
+func (aq *Aquarium) CalculatePollution() float64 {
+	return aq.Contaminants() / float64(aq.Size())
+}
+
 type AquariumBuilder struct {
 	size         int
 	animal       string
@@ -72,7 +62,7 @@ type AquariumBuilder struct {
 	cleaners     float64
 }
 
-func NewAquariumBuilder() *AquariumBuilder {
+func NewBuilder() *AquariumBuilder {
 	return &AquariumBuilder{}
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 func TestAquariumBuilder(t *testing.T) {
-	aq := NewAquariumBuilder().
+	aq := NewBuilder().
 		SetSize(100).
 		SetAnimal("Salmon").
 		SetSaltLevel(0.3).

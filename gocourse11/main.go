@@ -8,7 +8,7 @@ import (
 
 func main() {
 	aquariums := []*aquarium.Aquarium{
-		aquarium.NewAquariumBuilder().
+		aquarium.NewBuilder().
 			SetSize(100).
 			SetAnimal("Salmon").
 			SetSaltLevel(0.3).
@@ -17,7 +17,7 @@ func main() {
 			SetCleaners(0.5).
 			Build(),
 
-		aquarium.NewAquariumBuilder().
+		aquarium.NewBuilder().
 			SetSize(200).
 			SetAnimal("Shrimp").
 			SetSaltLevel(0.2).
@@ -26,7 +26,7 @@ func main() {
 			SetCleaners(0.7).
 			Build(),
 
-		aquarium.NewAquariumBuilder().
+		aquarium.NewBuilder().
 			SetSize(2000).
 			SetAnimal("Crocodile").
 			SetSaltLevel(0.4).
@@ -39,8 +39,7 @@ func main() {
 	centralServer := server.Server{}
 
 	for _, aq := range aquariums {
-		centralServer.AddAquarium(aq)
-		centralServer.AddFilterSystem(filter.NewBasicFilter(aq))
+		centralServer.AddFilter(filter.NewBasic(aq))
 	}
 
 	centralServer.MonitorAndFilter()

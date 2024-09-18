@@ -8,19 +8,18 @@ import (
 )
 
 func TestMonitorAndFilter(t *testing.T) {
-	aq := aquarium.NewAquariumBuilder().
+	aq := aquarium.NewBuilder().
 		SetSize(100).
 		SetContaminants(0.4).
 		Build()
 
-	basicFilter := filter.NewBasicFilter(aq)
+	basicFilter := filter.NewBasic(aq)
 	srv := Server{}
-	srv.AddAquarium(aq)
-	srv.AddFilterSystem(basicFilter)
+	srv.AddFilter(basicFilter)
 
 	srv.MonitorAndFilter()
 
-	pollutionLevel := srv.CalculatePollution(aq)
+	pollutionLevel := aq.CalculatePollution()
 	expectedPollution := 0.004
 	if pollutionLevel != expectedPollution {
 		t.Errorf("expected pollution level %f, got %f", expectedPollution, pollutionLevel)
