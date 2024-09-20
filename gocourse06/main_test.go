@@ -1,14 +1,14 @@
 package main
 
 import (
+	"io"
 	"log/slog"
-	"os"
 	"sync"
 	"testing"
 )
 
 func TestEnclosureController(t *testing.T) {
-	logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+	logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	enclosureReqChan := make(chan EnclosureRequest)
 	var wg sync.WaitGroup

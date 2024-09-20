@@ -90,11 +90,11 @@ func (an *Animal) RandomlyChangeIndicators() {
 	an.SetHealth(rand.IntN(MaxIndicatorValue) + 1)
 	an.SetMood(rand.IntN(MaxIndicatorValue) + 1)
 
-	//	hunger is more linear
+	// hunger is more linear
 	randDelta := rand.IntN(MaxSatietyCoefDelta-10) + 10
 	an.SetSatiety(max(CriticalIndicatorCoef, an.Satiety()-randDelta))
 
-	an.logger.Info("Animal randomly changed it's values: ", "values", an, "is hungry:", an.IsHungry(), "has critical values: ", an.HasCriticalValues())
+	an.logger.Info("Animal randomly changed it's values: ", "values", an, "isHungry:", an.IsHungry(), "hasCriticalValues: ", an.HasCriticalValues())
 }
 
 func (an *Animal) eat(food int) {

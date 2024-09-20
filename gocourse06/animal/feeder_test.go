@@ -1,17 +1,17 @@
 package animal
 
 import (
+	"io"
 	"log/slog"
-	"os"
 	"testing"
 )
 
 func TestFeed(t *testing.T) {
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	feeder := NewFeeder(1, logger)
-	if feeder.Volume() != FeederCapacity {
-		t.Errorf("Feeder should start full")
+	if feeder.Volume() != 100 {
+		t.Errorf("Feeder volume expected to be 100, got %d", feeder.Volume())
 	}
 
 	animal := NewAnimal(1, logger)

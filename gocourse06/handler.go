@@ -20,7 +20,7 @@ func monitorSystem(logChan <-chan string, wg *sync.WaitGroup) {
 
 			logger.Info("[LOG]", "message", logData)
 		default:
-			time.Sleep(time.Duration(time.Millisecond * time.Duration(10)))
+			time.Sleep(time.Duration(10 * time.Millisecond))
 		}
 	}
 }
@@ -45,7 +45,7 @@ func handleFeeder(feederChan <-chan *animal.Feeder, wg *sync.WaitGroup) {
 			f.Refill()
 
 		default:
-			time.Sleep(time.Duration(time.Millisecond * time.Duration(10)))
+			time.Sleep(time.Duration(10 * time.Millisecond))
 		}
 	}
 }
@@ -79,7 +79,7 @@ func handleHunger(feeders []*animal.Feeder, animalChan <-chan *animal.Animal, fe
 				}
 			}
 		default:
-			time.Sleep(time.Duration(time.Millisecond * time.Duration(10)))
+			time.Sleep(time.Duration(10 * time.Millisecond))
 		}
 	}
 }

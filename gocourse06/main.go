@@ -123,12 +123,11 @@ func emulateAnimalChanges(an *animal.Animal, animalChan chan<- *animal.Animal, e
 			} else {
 				logChan <- fmt.Sprintf("Animal #%v is hungry but access to the enclosure was denied, satiety = %v\n", an.ID, an.Satiety())
 			}
-
 		}
 		if an.HasCriticalValues() {
 			logChan <- string("animal has critical values:" + an.String())
 		}
-		time.Sleep(time.Duration(time.Millisecond * time.Duration(100)))
+		time.Sleep(time.Duration(100 * time.Millisecond))
 	}
 }
 
@@ -165,18 +164,16 @@ func main() {
 	wg.Add(1)
 	go enclosureController(enclosureReqChan, &wg)
 
-	{
-		var animalWg sync.WaitGroup
-		for _, an := range animals {
-			animalWg.Add(1)
-			go emulateAnimalChanges(an, animalChan, enclosureReqChan, logChan, &animalWg)
-		}
-
-		animalWg.Wait()
-		close(animalChan)
-		close(enclosureReqChan)
-		close(logChan)
+	var animalWg sync.WaitGroup
+	for _, an := range animals {
+		animalWg.Add(1)
+		go emulateAnimalChanges(an, animalChan, enclosureReqChan, logChan, &animalWg)
 	}
+
+	animalWg.Wait()
+	close(animalChan)
+	close(enclosureReqChan)
+	close(logChan)
 
 	wg.Wait()
 	logger.Info("End")

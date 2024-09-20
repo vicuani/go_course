@@ -11,8 +11,8 @@ const FeederCapacity = 100
 type Feeder struct {
 	ID int
 
-	parametersMu sync.Mutex
-	volume       int
+	volumeMu sync.Mutex
+	volume   int
 
 	logger *slog.Logger
 }
@@ -30,16 +30,16 @@ func (f *Feeder) String() string {
 }
 
 func (f *Feeder) Volume() int {
-	defer f.parametersMu.Unlock()
+	defer f.volumeMu.Unlock()
 
-	f.parametersMu.Lock()
+	f.volumeMu.Lock()
 	return f.volume
 }
 
 func (f *Feeder) SetVolume(v int) {
-	f.parametersMu.Lock()
+	f.volumeMu.Lock()
 	f.volume = v
-	f.parametersMu.Unlock()
+	f.volumeMu.Unlock()
 }
 
 func (f *Feeder) IsEmpty() bool {
