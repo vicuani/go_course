@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package taxi;
+
+option go_package = "github.com/vicuani/go_course/gocourse17/grpcapi";
+
+service TaxiService {
+    rpc EvaluateCargoState(EvaluateCargoStateRequest) returns (EvaluateResponse);
+    rpc EvaluateDriverService(EvaluateDriverServiceRequest) returns (EvaluateResponse);
+    rpc EvaluateDeliverySpeed(EvaluateDeliverySpeedRequest) returns (EvaluateResponse);
+    rpc DriverReviewsHistory(DriverReviewsHistoryRequest) returns (DriverReviewsHistoryResponse);
+}
+
+message EvaluateCargoStateRequest {
+    int32 driverID = 1;
+    int32 cargoState = 2;
+}
+
+message EvaluateDriverServiceRequest {
+    int32 driverID = 1;
+    int32 driverService = 2;
+}
+
+message EvaluateDeliverySpeedRequest {
+    int32 driverID = 1;
+    int32 deliverySpeed = 2;
+}
+
+message EvaluateResponse {
+    string message = 1;
+}
+
+message DriverReviewsHistoryRequest {
+    int32 driverID = 1;
+}
+
+message DriverReviewsHistoryResponse {
+    repeated int32 cargoState = 1;
+    repeated int32 driverService = 2;
+    repeated int32 deliverySpeed = 3;
+}
