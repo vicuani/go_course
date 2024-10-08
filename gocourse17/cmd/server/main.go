@@ -18,63 +18,64 @@ type Review struct {
 
 type server struct {
 	grpcapi.UnimplementedTaxiServiceServer
-	reviews map[int32]*Review
-	mu      sync.Mutex
+
+	reviewsMu sync.Mutex
+	reviews   map[int32]*Review
 }
 
-func (s *server) EvaluateCargoState(ctx context.Context, req *grpcapi.EvaluateCargoStateRequest) (*grpcapi.EvaluateResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *server) EvaluateCargoState(ctx context.Context, req *grpcapi.EvaluateCargoStateRequest) (*grpcapi.EvaluateCargoStateResponse, error) {
+	s.reviewsMu.Lock()
+	defer s.reviewsMu.Unlock()
 
-	if s.reviews[req.DriverID] == nil {
-		s.reviews[req.DriverID] = &Review{}
+	if s.reviews[req.DriverId] == nil {
+		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverID].CargoState = append(s.reviews[req.DriverID].CargoState, req.CargoState)
+	s.reviews[req.DriverId].CargoState = append(s.reviews[req.DriverId].CargoState, req.CargoState)
 
-	return &grpcapi.EvaluateResponse{Message: "Cargo state rating added"}, nil
+	return &grpcapi.EvaluateCargoStateResponse{Message: "Cargo state rating added"}, nil
 }
 
-func (s *server) EvaluateDriverService(ctx context.Context, req *grpcapi.EvaluateDriverServiceRequest) (*grpcapi.EvaluateResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *server) EvaluateDriverService(ctx context.Context, req *grpcapi.EvaluateDriverServiceRequest) (*grpcapi.EvaluateDriverServiceResponse, error) {
+	s.reviewsMu.Lock()
+	defer s.reviewsMu.Unlock()
 
-	if s.reviews[req.DriverID] == nil {
-		s.reviews[req.DriverID] = &Review{}
+	if s.reviews[req.DriverId] == nil {
+		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverID].DriverService = append(s.reviews[req.DriverID].DriverService, req.DriverService)
+	s.reviews[req.DriverId].DriverService = append(s.reviews[req.DriverId].DriverService, req.DriverService)
 
-	return &grpcapi.EvaluateResponse{Message: "Driver service rating added"}, nil
+	return &grpcapi.EvaluateDriverServiceResponse{Message: "Driver service rating added"}, nil
 }
 
-func (s *server) EvaluateDeliverySpeed(ctx context.Context, req *grpcapi.EvaluateDeliverySpeedRequest) (*grpcapi.EvaluateResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *server) EvaluateDeliverySpeed(ctx context.Context, req *grpcapi.EvaluateDeliverySpeedRequest) (*grpcapi.EvaluateDeliverySpeedResponse, error) {
+	s.reviewsMu.Lock()
+	defer s.reviewsMu.Unlock()
 
-	if s.reviews[req.DriverID] == nil {
-		s.reviews[req.DriverID] = &Review{}
+	if s.reviews[req.DriverId] == nil {
+		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverID].DeliverySpeed = append(s.reviews[req.DriverID].DeliverySpeed, req.DeliverySpeed)
+	s.reviews[req.DriverId].DeliverySpeed = append(s.reviews[req.DriverId].DeliverySpeed, req.DeliverySpeed)
 
-	return &grpcapi.EvaluateResponse{Message: "Delivery speed rating added"}, nil
+	return &grpcapi.EvaluateDeliverySpeedResponse{Message: "Delivery speed rating added"}, nil
 }
 
 func (s *server) DriverReviewsHistory(ctx context.Context, req *grpcapi.DriverReviewsHistoryRequest) (*grpcapi.DriverReviewsHistoryResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.reviewsMu.Lock()
+	defer s.reviewsMu.Unlock()
 
-	review, ok := s.reviews[req.DriverID]
+	review, ok := s.reviews[req.DriverId]
 	if !ok {
 		return &grpcapi.DriverReviewsHistoryResponse{
-			CargoState: []int32{},
-			DriverService: []int32{},
-			DeliverySpeed: []int32{},
+			CargoStates:    []int32{},
+			DriverServices: []int32{},
+			DeliverySpeeds: []int32{},
 		}, nil
 	}
 
 	return &grpcapi.DriverReviewsHistoryResponse{
-		CargoState: review.CargoState,
-		DriverService: review.DriverService,
-		DeliverySpeed: review.DeliverySpeed,
+		CargoStates:    review.CargoState,
+		DriverServices: review.DriverService,
+		DeliverySpeeds: review.DeliverySpeed,
 	}, nil
 }
 

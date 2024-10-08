@@ -5,37 +5,45 @@ package taxi;
 option go_package = "github.com/vicuani/go_course/gocourse17/grpcapi";
 
 service TaxiService {
-    rpc EvaluateCargoState(EvaluateCargoStateRequest) returns (EvaluateResponse);
-    rpc EvaluateDriverService(EvaluateDriverServiceRequest) returns (EvaluateResponse);
-    rpc EvaluateDeliverySpeed(EvaluateDeliverySpeedRequest) returns (EvaluateResponse);
+    rpc EvaluateCargoState(EvaluateCargoStateRequest) returns (EvaluateCargoStateResponse);
+    rpc EvaluateDriverService(EvaluateDriverServiceRequest) returns (EvaluateDriverServiceResponse);
+    rpc EvaluateDeliverySpeed(EvaluateDeliverySpeedRequest) returns (EvaluateDeliverySpeedResponse);
     rpc DriverReviewsHistory(DriverReviewsHistoryRequest) returns (DriverReviewsHistoryResponse);
 }
 
 message EvaluateCargoStateRequest {
-    int32 driverID = 1;
-    int32 cargoState = 2;
+    int32 driver_id = 1;
+    int32 cargo_state = 2;
 }
 
 message EvaluateDriverServiceRequest {
-    int32 driverID = 1;
-    int32 driverService = 2;
+    int32 driver_id = 1;
+    int32 driver_service = 2;
 }
 
 message EvaluateDeliverySpeedRequest {
-    int32 driverID = 1;
-    int32 deliverySpeed = 2;
+    int32 driver_id = 1;
+    int32 delivery_speed = 2;
 }
 
-message EvaluateResponse {
+message EvaluateCargoStateResponse {
+    string message = 1;
+}
+
+message EvaluateDriverServiceResponse {
+    string message = 1;
+}
+
+message EvaluateDeliverySpeedResponse {
     string message = 1;
 }
 
 message DriverReviewsHistoryRequest {
-    int32 driverID = 1;
+    int32 driver_id = 1;
 }
 
 message DriverReviewsHistoryResponse {
-    repeated int32 cargoState = 1;
-    repeated int32 driverService = 2;
-    repeated int32 deliverySpeed = 3;
+    repeated int32 cargo_states = 1;
+    repeated int32 driver_services = 2;
+    repeated int32 delivery_speeds = 3;
 }

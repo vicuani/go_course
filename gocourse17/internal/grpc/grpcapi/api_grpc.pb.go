@@ -29,9 +29,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TaxiServiceClient interface {
-	EvaluateCargoState(ctx context.Context, in *EvaluateCargoStateRequest, opts ...grpc.CallOption) (*EvaluateResponse, error)
-	EvaluateDriverService(ctx context.Context, in *EvaluateDriverServiceRequest, opts ...grpc.CallOption) (*EvaluateResponse, error)
-	EvaluateDeliverySpeed(ctx context.Context, in *EvaluateDeliverySpeedRequest, opts ...grpc.CallOption) (*EvaluateResponse, error)
+	EvaluateCargoState(ctx context.Context, in *EvaluateCargoStateRequest, opts ...grpc.CallOption) (*EvaluateCargoStateResponse, error)
+	EvaluateDriverService(ctx context.Context, in *EvaluateDriverServiceRequest, opts ...grpc.CallOption) (*EvaluateDriverServiceResponse, error)
+	EvaluateDeliverySpeed(ctx context.Context, in *EvaluateDeliverySpeedRequest, opts ...grpc.CallOption) (*EvaluateDeliverySpeedResponse, error)
 	DriverReviewsHistory(ctx context.Context, in *DriverReviewsHistoryRequest, opts ...grpc.CallOption) (*DriverReviewsHistoryResponse, error)
 }
 
@@ -43,9 +43,9 @@ func NewTaxiServiceClient(cc grpc.ClientConnInterface) TaxiServiceClient {
 	return &taxiServiceClient{cc}
 }
 
-func (c *taxiServiceClient) EvaluateCargoState(ctx context.Context, in *EvaluateCargoStateRequest, opts ...grpc.CallOption) (*EvaluateResponse, error) {
+func (c *taxiServiceClient) EvaluateCargoState(ctx context.Context, in *EvaluateCargoStateRequest, opts ...grpc.CallOption) (*EvaluateCargoStateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EvaluateResponse)
+	out := new(EvaluateCargoStateResponse)
 	err := c.cc.Invoke(ctx, TaxiService_EvaluateCargoState_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -53,9 +53,9 @@ func (c *taxiServiceClient) EvaluateCargoState(ctx context.Context, in *Evaluate
 	return out, nil
 }
 
-func (c *taxiServiceClient) EvaluateDriverService(ctx context.Context, in *EvaluateDriverServiceRequest, opts ...grpc.CallOption) (*EvaluateResponse, error) {
+func (c *taxiServiceClient) EvaluateDriverService(ctx context.Context, in *EvaluateDriverServiceRequest, opts ...grpc.CallOption) (*EvaluateDriverServiceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EvaluateResponse)
+	out := new(EvaluateDriverServiceResponse)
 	err := c.cc.Invoke(ctx, TaxiService_EvaluateDriverService_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,9 +63,9 @@ func (c *taxiServiceClient) EvaluateDriverService(ctx context.Context, in *Evalu
 	return out, nil
 }
 
-func (c *taxiServiceClient) EvaluateDeliverySpeed(ctx context.Context, in *EvaluateDeliverySpeedRequest, opts ...grpc.CallOption) (*EvaluateResponse, error) {
+func (c *taxiServiceClient) EvaluateDeliverySpeed(ctx context.Context, in *EvaluateDeliverySpeedRequest, opts ...grpc.CallOption) (*EvaluateDeliverySpeedResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EvaluateResponse)
+	out := new(EvaluateDeliverySpeedResponse)
 	err := c.cc.Invoke(ctx, TaxiService_EvaluateDeliverySpeed_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -87,9 +87,9 @@ func (c *taxiServiceClient) DriverReviewsHistory(ctx context.Context, in *Driver
 // All implementations must embed UnimplementedTaxiServiceServer
 // for forward compatibility.
 type TaxiServiceServer interface {
-	EvaluateCargoState(context.Context, *EvaluateCargoStateRequest) (*EvaluateResponse, error)
-	EvaluateDriverService(context.Context, *EvaluateDriverServiceRequest) (*EvaluateResponse, error)
-	EvaluateDeliverySpeed(context.Context, *EvaluateDeliverySpeedRequest) (*EvaluateResponse, error)
+	EvaluateCargoState(context.Context, *EvaluateCargoStateRequest) (*EvaluateCargoStateResponse, error)
+	EvaluateDriverService(context.Context, *EvaluateDriverServiceRequest) (*EvaluateDriverServiceResponse, error)
+	EvaluateDeliverySpeed(context.Context, *EvaluateDeliverySpeedRequest) (*EvaluateDeliverySpeedResponse, error)
 	DriverReviewsHistory(context.Context, *DriverReviewsHistoryRequest) (*DriverReviewsHistoryResponse, error)
 	mustEmbedUnimplementedTaxiServiceServer()
 }
@@ -101,13 +101,13 @@ type TaxiServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTaxiServiceServer struct{}
 
-func (UnimplementedTaxiServiceServer) EvaluateCargoState(context.Context, *EvaluateCargoStateRequest) (*EvaluateResponse, error) {
+func (UnimplementedTaxiServiceServer) EvaluateCargoState(context.Context, *EvaluateCargoStateRequest) (*EvaluateCargoStateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EvaluateCargoState not implemented")
 }
-func (UnimplementedTaxiServiceServer) EvaluateDriverService(context.Context, *EvaluateDriverServiceRequest) (*EvaluateResponse, error) {
+func (UnimplementedTaxiServiceServer) EvaluateDriverService(context.Context, *EvaluateDriverServiceRequest) (*EvaluateDriverServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EvaluateDriverService not implemented")
 }
-func (UnimplementedTaxiServiceServer) EvaluateDeliverySpeed(context.Context, *EvaluateDeliverySpeedRequest) (*EvaluateResponse, error) {
+func (UnimplementedTaxiServiceServer) EvaluateDeliverySpeed(context.Context, *EvaluateDeliverySpeedRequest) (*EvaluateDeliverySpeedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EvaluateDeliverySpeed not implemented")
 }
 func (UnimplementedTaxiServiceServer) DriverReviewsHistory(context.Context, *DriverReviewsHistoryRequest) (*DriverReviewsHistoryResponse, error) {

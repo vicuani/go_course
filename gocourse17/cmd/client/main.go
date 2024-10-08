@@ -15,12 +15,13 @@ func sendCargoStateRating(client grpcapi.TaxiServiceClient, driverID int32, carg
 	defer cancel()
 
 	req := &grpcapi.EvaluateCargoStateRequest{
-		DriverID:   driverID,
+		DriverId:   driverID,
 		CargoState: cargoState,
 	}
 
 	res, err := client.EvaluateCargoState(ctx, req)
 	if err != nil {
+		cancel()
 		log.Fatalf("could not submit cargo state rating: %v", err)
 	}
 
@@ -32,12 +33,13 @@ func sendDriverServiceRating(client grpcapi.TaxiServiceClient, driverID int32, d
 	defer cancel()
 
 	req := &grpcapi.EvaluateDriverServiceRequest{
-		DriverID:      driverID,
+		DriverId:      driverID,
 		DriverService: driverService,
 	}
 
 	res, err := client.EvaluateDriverService(ctx, req)
 	if err != nil {
+		cancel()
 		log.Fatalf("could not submit driver service rating: %v", err)
 	}
 
@@ -49,12 +51,13 @@ func sendDeliverySpeedRating(client grpcapi.TaxiServiceClient, driverID int32, d
 	defer cancel()
 
 	req := &grpcapi.EvaluateDeliverySpeedRequest{
-		DriverID:      driverID,
+		DriverId:      driverID,
 		DeliverySpeed: deliverySpeed,
 	}
 
 	res, err := client.EvaluateDeliverySpeed(ctx, req)
 	if err != nil {
+		cancel()
 		log.Fatalf("could not submit delivery speed rating: %v", err)
 	}
 
@@ -66,26 +69,27 @@ func getDriverReviews(client grpcapi.TaxiServiceClient, driverID int32) {
 	defer cancel()
 
 	req := &grpcapi.DriverReviewsHistoryRequest{
-		DriverID: driverID,
+		DriverId: driverID,
 	}
 
 	res, err := client.DriverReviewsHistory(ctx, req)
 	if err != nil {
+		cancel()
 		log.Fatalf("could not get driver reviews: %v", err)
 	}
 
 	log.Printf("\nCargo states ratings for driver: %v\n", driverID)
-	for i, cargoState := range res.CargoState {
+	for i, cargoState := range res.CargoStates {
 		log.Printf("#%v cargo state: %v\n", i, cargoState)
 	}
 
 	log.Printf("\nDriver service ratings for driver: %v\n", driverID)
-	for i, driverService := range res.DriverService {
+	for i, driverService := range res.DriverServices {
 		log.Printf("#%v driver service: %v\n", i, driverService)
 	}
 
 	log.Printf("\nDelivery speed ratings for driver: %v\n", driverID)
-	for i, deliverySpeed := range res.DeliverySpeed {
+	for i, deliverySpeed := range res.DeliverySpeeds {
 		log.Printf("#%v delivery speed: %v\n", i, deliverySpeed)
 	}
 	log.Println()
