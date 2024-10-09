@@ -15,11 +15,11 @@ service TaxiService {
 }
 
 enum Enum {
-    A = 0;
-    B = 1;
-    C = 2;
-    D = 3;
-    E = 4;
+    Excellent = 0;
+    Great = 1;
+    Good = 2;
+    Fair = 3;
+    Poor = 4;
 }
 
 message EvaluateCargoStateRequest {

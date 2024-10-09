@@ -65,7 +65,7 @@ func TestEvaluateCargoState(t *testing.T) {
 
 	req := &grpcapi.EvaluateCargoStateRequest{
 		DriverId:   123,
-		CargoState: 5,
+		CargoState: grpcapi.Enum_Excellent,
 	}
 
 	res, err := client.EvaluateCargoState(ctx, req)
@@ -87,7 +87,7 @@ func TestEvaluateDriverService(t *testing.T) {
 
 	req := &grpcapi.EvaluateDriverServiceRequest{
 		DriverId:      234,
-		DriverService: 4,
+		DriverService: grpcapi.Enum_Poor,
 	}
 
 	res, err := client.EvaluateDriverService(ctx, req)
@@ -109,7 +109,7 @@ func TestEvaluateDeliverySpeed(t *testing.T) {
 
 	req := &grpcapi.EvaluateDeliverySpeedRequest{
 		DriverId:      135,
-		DeliverySpeed: 3,
+		DeliverySpeed: grpcapi.Enum_Fair,
 	}
 
 	res, err := client.EvaluateDeliverySpeed(ctx, req)
@@ -129,17 +129,17 @@ func TestDriverReviewsHistory(t *testing.T) {
 	defer cancel()
 	client := newTestClient(t, ctx, dialer)
 
-	_, err := client.EvaluateCargoState(ctx, &grpcapi.EvaluateCargoStateRequest{DriverId: 246, CargoState: 5})
+	_, err := client.EvaluateCargoState(ctx, &grpcapi.EvaluateCargoStateRequest{DriverId: 246, CargoState: grpcapi.Enum_Fair})
 	if err != nil {
 		t.Fatalf("Failed to evaluate cargo state: %v", err)
 	}
 
-	_, err = client.EvaluateDriverService(ctx, &grpcapi.EvaluateDriverServiceRequest{DriverId: 246, DriverService: 4})
+	_, err = client.EvaluateDriverService(ctx, &grpcapi.EvaluateDriverServiceRequest{DriverId: 246, DriverService: grpcapi.Enum_Excellent})
 	if err != nil {
 		t.Fatalf("Failed to evaluate driver service: %v", err)
 	}
 
-	_, err = client.EvaluateDeliverySpeed(ctx, &grpcapi.EvaluateDeliverySpeedRequest{DriverId: 246, DeliverySpeed: 3})
+	_, err = client.EvaluateDeliverySpeed(ctx, &grpcapi.EvaluateDeliverySpeedRequest{DriverId: 246, DeliverySpeed: grpcapi.Enum_Good})
 	if err != nil {
 		t.Fatalf("Failed to evaluate delivery speed: %v", err)
 	}
@@ -150,13 +150,13 @@ func TestDriverReviewsHistory(t *testing.T) {
 		t.Fatalf("DriverReviewsHistory failed: %v", err)
 	}
 
-	if len(res.CargoStates) != 1 || res.CargoStates[0] != 5 {
-		t.Errorf("Expected cargo states [5], but got %v", res.CargoStates)
+	if len(res.CargoStates) != 1 || res.CargoStates[0] != grpcapi.Enum_Fair {
+		t.Errorf("Expected cargo states [Enum_Fair], but got %v", res.CargoStates)
 	}
-	if len(res.DriverServices) != 1 || res.DriverServices[0] != 4 {
-		t.Errorf("Expected driver services [4], but got %v", res.DriverServices)
+	if len(res.DriverServices) != 1 || res.DriverServices[0] != grpcapi.Enum_Excellent {
+		t.Errorf("Expected driver services [Enum_Excellent], but got %v", res.DriverServices)
 	}
-	if len(res.DeliverySpeeds) != 1 || res.DeliverySpeeds[0] != 3 {
-		t.Errorf("Expected delivery speeds [3], but got %v", res.DeliverySpeeds)
+	if len(res.DeliverySpeeds) != 1 || res.DeliverySpeeds[0] != grpcapi.Enum_Good {
+		t.Errorf("Expected delivery speeds [Enum_Good], but got %v", res.DeliverySpeeds)
 	}
 }

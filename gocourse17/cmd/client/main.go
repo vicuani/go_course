@@ -110,18 +110,18 @@ func main() {
 	driverID := int32(567)
 	serviceClient := TaxiServiceClient{client: client}
 
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_B)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_C)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Great)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Good)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
 
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_C)
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_B)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_Good)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_Great)
 
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_A)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_A)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_B)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Excellent)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Excellent)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Great)
 
 	serviceClient.getDriverReviews(driverID)
 }
