@@ -10,7 +10,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func sendCargoStateRating(client grpcapi.TaxiServiceClient, driverID int32, cargoState int32) {
+type TaxiServiceClient struct {
+	client grpcapi.TaxiServiceClient
+}
+
+func (t *TaxiServiceClient) sendCargoStateRating(driverID int32, cargoState grpcapi.Enum) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -19,7 +23,7 @@ func sendCargoStateRating(client grpcapi.TaxiServiceClient, driverID int32, carg
 		CargoState: cargoState,
 	}
 
-	res, err := client.EvaluateCargoState(ctx, req)
+	res, err := t.client.EvaluateCargoState(ctx, req)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not submit cargo state rating: %v", err)
@@ -28,7 +32,7 @@ func sendCargoStateRating(client grpcapi.TaxiServiceClient, driverID int32, carg
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func sendDriverServiceRating(client grpcapi.TaxiServiceClient, driverID int32, driverService int32) {
+func (t *TaxiServiceClient) sendDriverServiceRating(driverID int32, driverService grpcapi.Enum) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -37,7 +41,7 @@ func sendDriverServiceRating(client grpcapi.TaxiServiceClient, driverID int32, d
 		DriverService: driverService,
 	}
 
-	res, err := client.EvaluateDriverService(ctx, req)
+	res, err := t.client.EvaluateDriverService(ctx, req)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not submit driver service rating: %v", err)
@@ -46,7 +50,7 @@ func sendDriverServiceRating(client grpcapi.TaxiServiceClient, driverID int32, d
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func sendDeliverySpeedRating(client grpcapi.TaxiServiceClient, driverID int32, deliverySpeed int32) {
+func (t *TaxiServiceClient) sendDeliverySpeedRating(driverID int32, deliverySpeed grpcapi.Enum) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -55,7 +59,7 @@ func sendDeliverySpeedRating(client grpcapi.TaxiServiceClient, driverID int32, d
 		DeliverySpeed: deliverySpeed,
 	}
 
-	res, err := client.EvaluateDeliverySpeed(ctx, req)
+	res, err := t.client.EvaluateDeliverySpeed(ctx, req)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not submit delivery speed rating: %v", err)
@@ -64,7 +68,7 @@ func sendDeliverySpeedRating(client grpcapi.TaxiServiceClient, driverID int32, d
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func getDriverReviews(client grpcapi.TaxiServiceClient, driverID int32) {
+func (t *TaxiServiceClient) getDriverReviews(driverID int32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -72,7 +76,7 @@ func getDriverReviews(client grpcapi.TaxiServiceClient, driverID int32) {
 		DriverId: driverID,
 	}
 
-	res, err := client.DriverReviewsHistory(ctx, req)
+	res, err := t.client.DriverReviewsHistory(ctx, req)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not get driver reviews: %v", err)
@@ -104,19 +108,20 @@ func main() {
 
 	client := grpcapi.NewTaxiServiceClient(conn)
 	driverID := int32(567)
+	serviceClient := TaxiServiceClient{client: client}
 
-	sendCargoStateRating(client, driverID, 5)
-	sendCargoStateRating(client, driverID, 4)
-	sendCargoStateRating(client, driverID, 5)
-	sendCargoStateRating(client, driverID, 3)
-	sendCargoStateRating(client, driverID, 5)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_B)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_C)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_A)
 
-	sendDriverServiceRating(client, driverID, 3)
-	sendDriverServiceRating(client, driverID, 4)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_C)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_B)
 
-	sendDeliverySpeedRating(client, driverID, 5)
-	sendDeliverySpeedRating(client, driverID, 5)
-	sendDeliverySpeedRating(client, driverID, 4)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_A)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_A)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_B)
 
-	getDriverReviews(client, driverID)
+	serviceClient.getDriverReviews(driverID)
 }

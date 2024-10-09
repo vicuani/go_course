@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	"testing"
 	"time"
@@ -21,39 +20,48 @@ func init() {
 	lis = bufconn.Listen(bufSize)
 }
 
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
-}
+func startTestServer(t *testing.T) (dialer func(context.Context, string) (net.Conn, error)) {
+	lis := bufconn.Listen(bufSize)
 
-func startTestServer() *grpc.Server {
-	s := grpc.NewServer()
-	srv := server{reviews: make(map[int32]*Review)}
-	grpcapi.RegisterTaxiServiceServer(s, &srv)
-
+	baseServer := grpc.NewServer()
+	grpcapi.RegisterTaxiServiceServer(baseServer, newServer())
 	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+		if err := baseServer.Serve(lis); err != nil {
+			t.Errorf("error serving server: %v", err)
 		}
 	}()
 
-	return s
+	t.Cleanup(func() {
+		err := lis.Close()
+		if err != nil {
+			t.Fatalf("error closing listener: %v", err)
+		}
+		baseServer.Stop()
+	})
+
+	return func(ctx context.Context, _ string) (net.Conn, error) { return lis.DialContext(ctx) }
+}
+
+func newTestClient(t *testing.T, ctx context.Context, dialer func(context.Context, string) (net.Conn, error)) grpcapi.TaxiServiceClient {
+	conn, err := grpc.DialContext(ctx, "", grpc.WithContextDialer(dialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatalf("error connecting to server: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := conn.Close(); err != nil {
+			t.Fatalf("error closing connection: %v", err)
+		}
+	})
+
+	return grpcapi.NewTaxiServiceClient(conn)
 }
 
 func TestEvaluateCargoState(t *testing.T) {
-	srv := startTestServer()
-	defer srv.Stop()
+	dialer := startTestServer(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
-	// Deprecated method DialContext is used specially for mock-server
-    conn, err := grpc.DialContext(ctx, "", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-    if err != nil {
-        t.Fatalf("Failed to dial: %v", err)
-    }
-	defer conn.Close()
-
-	client := grpcapi.NewTaxiServiceClient(conn)
+	client := newTestClient(t, ctx, dialer)
 
 	req := &grpcapi.EvaluateCargoStateRequest{
 		DriverId:   123,
@@ -71,19 +79,11 @@ func TestEvaluateCargoState(t *testing.T) {
 }
 
 func TestEvaluateDriverService(t *testing.T) {
-	srv := startTestServer()
-	defer srv.Stop()
+	dialer := startTestServer(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
-    conn, err := grpc.DialContext(ctx, "", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-    if err != nil {
-        t.Fatalf("Failed to dial: %v", err)
-    }
-	defer conn.Close()
-
-	client := grpcapi.NewTaxiServiceClient(conn)
+	client := newTestClient(t, ctx, dialer)
 
 	req := &grpcapi.EvaluateDriverServiceRequest{
 		DriverId:      234,
@@ -101,19 +101,11 @@ func TestEvaluateDriverService(t *testing.T) {
 }
 
 func TestEvaluateDeliverySpeed(t *testing.T) {
-	srv := startTestServer()
-	defer srv.Stop()
+	dialer := startTestServer(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
-    conn, err := grpc.DialContext(ctx, "", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-    if err != nil {
-        t.Fatalf("Failed to dial: %v", err)
-    }
-	defer conn.Close()
-
-	client := grpcapi.NewTaxiServiceClient(conn)
+	client := newTestClient(t, ctx, dialer)
 
 	req := &grpcapi.EvaluateDeliverySpeedRequest{
 		DriverId:      135,
@@ -131,21 +123,13 @@ func TestEvaluateDeliverySpeed(t *testing.T) {
 }
 
 func TestDriverReviewsHistory(t *testing.T) {
-	srv := startTestServer()
-	defer srv.Stop()
+	dialer := startTestServer(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	client := newTestClient(t, ctx, dialer)
 
-    conn, err := grpc.DialContext(ctx, "", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-    if err != nil {
-        t.Fatalf("Failed to dial: %v", err)
-    }
-	defer conn.Close()
-
-	client := grpcapi.NewTaxiServiceClient(conn)
-
-	_, err = client.EvaluateCargoState(ctx, &grpcapi.EvaluateCargoStateRequest{DriverId: 246, CargoState: 5})
+	_, err := client.EvaluateCargoState(ctx, &grpcapi.EvaluateCargoStateRequest{DriverId: 246, CargoState: 5})
 	if err != nil {
 		t.Fatalf("Failed to evaluate cargo state: %v", err)
 	}

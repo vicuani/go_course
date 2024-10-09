@@ -11,9 +11,9 @@ import (
 )
 
 type Review struct {
-	CargoState    []int32
-	DriverService []int32
-	DeliverySpeed []int32
+	CargoState    []grpcapi.Enum
+	DriverService []grpcapi.Enum
+	DeliverySpeed []grpcapi.Enum
 }
 
 type server struct {
@@ -21,6 +21,10 @@ type server struct {
 
 	reviewsMu sync.Mutex
 	reviews   map[int32]*Review
+}
+
+func newServer() *server {
+	return &server{reviews: make(map[int32]*Review)}
 }
 
 func (s *server) EvaluateCargoState(ctx context.Context, req *grpcapi.EvaluateCargoStateRequest) (*grpcapi.EvaluateCargoStateResponse, error) {
@@ -66,9 +70,9 @@ func (s *server) DriverReviewsHistory(ctx context.Context, req *grpcapi.DriverRe
 	review, ok := s.reviews[req.DriverId]
 	if !ok {
 		return &grpcapi.DriverReviewsHistoryResponse{
-			CargoStates:    []int32{},
-			DriverServices: []int32{},
-			DeliverySpeeds: []int32{},
+			CargoStates:    []grpcapi.Enum{},
+			DriverServices: []grpcapi.Enum{},
+			DeliverySpeeds: []grpcapi.Enum{},
 		}, nil
 	}
 
@@ -80,14 +84,13 @@ func (s *server) DriverReviewsHistory(ctx context.Context, req *grpcapi.DriverRe
 }
 
 func main() {
-
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen gRPC: %v", err)
 	}
 
 	s := grpc.NewServer()
-	grpcapi.RegisterTaxiServiceServer(s, &server{reviews: make(map[int32]*Review)})
+	grpcapi.RegisterTaxiServiceServer(s, newServer())
 
 	log.Println("gRPC server is running on port 50051...")
 	if err := s.Serve(lis); err != nil {
