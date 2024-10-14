@@ -14,27 +14,28 @@ service TaxiService {
     rpc DriverReviewsHistory(DriverReviewsHistoryRequest) returns (DriverReviewsHistoryResponse);
 }
 
-enum Enum {
-    Excellent = 0;
-    Great = 1;
-    Good = 2;
-    Fair = 3;
-    Poor = 4;
+enum Rating {
+    RATING_UNSPECIFIED = 0;
+    RATING_POOR = 1;
+    RATING_FAIR = 2;
+    RATING_GOOD = 3;
+    RATING_GREAT = 4;
+    RATING_EXCELLENT = 5;
 }
 
 message EvaluateCargoStateRequest {
     int32 driver_id = 1;
-    Enum cargo_state = 2;
+    Rating cargo_state = 2;
 }
 
 message EvaluateDriverServiceRequest {
     int32 driver_id = 1;
-    Enum driver_service = 2;
+    Rating driver_service = 2;
 }
 
 message EvaluateDeliverySpeedRequest {
     int32 driver_id = 1;
-    Enum delivery_speed = 2;
+    Rating delivery_speed = 2;
 }
 
 message EvaluateCargoStateResponse {
@@ -54,7 +55,7 @@ message DriverReviewsHistoryRequest {
 }
 
 message DriverReviewsHistoryResponse {
-    repeated Enum cargo_states = 1;
-    repeated Enum driver_services = 2;
-    repeated Enum delivery_speeds = 3;
+    repeated Rating cargo_states = 1;
+    repeated Rating driver_services = 2;
+    repeated Rating delivery_speeds = 3;
 }

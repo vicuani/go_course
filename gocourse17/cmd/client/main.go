@@ -14,7 +14,7 @@ type TaxiServiceClient struct {
 	client grpcapi.TaxiServiceClient
 }
 
-func (t *TaxiServiceClient) sendCargoStateRating(driverID int32, cargoState grpcapi.Enum) {
+func (t *TaxiServiceClient) sendCargoStateRating(driverID int32, cargoState grpcapi.Rating) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -32,7 +32,7 @@ func (t *TaxiServiceClient) sendCargoStateRating(driverID int32, cargoState grpc
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func (t *TaxiServiceClient) sendDriverServiceRating(driverID int32, driverService grpcapi.Enum) {
+func (t *TaxiServiceClient) sendDriverServiceRating(driverID int32, driverService grpcapi.Rating) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -50,7 +50,7 @@ func (t *TaxiServiceClient) sendDriverServiceRating(driverID int32, driverServic
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func (t *TaxiServiceClient) sendDeliverySpeedRating(driverID int32, deliverySpeed grpcapi.Enum) {
+func (t *TaxiServiceClient) sendDeliverySpeedRating(driverID int32, deliverySpeed grpcapi.Rating) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -110,18 +110,18 @@ func main() {
 	driverID := int32(567)
 	serviceClient := TaxiServiceClient{client: client}
 
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Great)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Good)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Enum_Excellent)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GREAT)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GOOD)
+	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
 
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_Good)
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Enum_Great)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GOOD)
+	serviceClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GREAT)
 
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Excellent)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Excellent)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Enum_Great)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_GREAT)
 
 	serviceClient.getDriverReviews(driverID)
 }
