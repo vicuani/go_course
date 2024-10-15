@@ -15,6 +15,7 @@ func readUsers(reader io.Reader) ([]User, error) {
 
 	var users []User
 	for i, record := range records {
+		// first line is skipped because it contains column names, not data itself
 		if i == 0 {
 			continue
 		}
@@ -30,6 +31,7 @@ func readUsers(reader io.Reader) ([]User, error) {
 		}
 
 		user := User{
+			ID:         i,
 			FirstName:  record[0],
 			LastName:   record[1],
 			Email:      record[2],
@@ -53,7 +55,12 @@ func readStatistics(reader io.Reader) ([]Statistics, error) {
 		return nil, err
 	}
 
-	for _, record := range records[1:] {
+	for i, record := range records {
+		// first line is skipped because it contains column names, not data itself
+		if i == 0 {
+			continue
+		}
+
 		averageTrips, err := strconv.Atoi(record[2])
 		if err != nil {
 			return nil, err
