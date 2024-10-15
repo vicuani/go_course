@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
+	"google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
 )
 
 const bufSize = 1024 * 1024
@@ -64,8 +66,20 @@ func TestEvaluateCargoState(t *testing.T) {
 		}
 
 		_, err := client.EvaluateCargoState(ctx, req)
-		if err == nil {
-			t.Fatalf("Expected error 'incorrect driver id' but got no error")
+		if code := status.Code(err); code != codes.InvalidArgument {
+			t.Errorf("Expected status code %v, got %v", codes.InvalidArgument, code)
+		}
+	})
+
+	t.Run("incorrect rating id", func(t *testing.T) {
+		req := &grpcapi.EvaluateCargoStateRequest{
+			DriverId:   4,
+			CargoState: grpcapi.Rating_RATING_UNSPECIFIED,
+		}
+
+		_, err := client.EvaluateCargoState(ctx, req)
+		if code := status.Code(err); code != codes.InvalidArgument {
+			t.Errorf("Expected status code %v, got %v", codes.InvalidArgument, code)
 		}
 	})
 
@@ -106,6 +120,18 @@ func TestEvaluateDriverService(t *testing.T) {
 		}
 	})
 
+	t.Run("incorrect rating", func(t *testing.T) {
+		req := &grpcapi.EvaluateDriverServiceRequest{
+			DriverId:      1,
+			DriverService: grpcapi.Rating_RATING_UNSPECIFIED,
+		}
+
+		_, err := client.EvaluateDriverService(ctx, req)
+		if err == nil {
+			t.Fatalf("Expected error 'incorrect driver id' but got no error")
+		}
+	})
+
 	t.Run("normal case", func(t *testing.T) {
 		req := &grpcapi.EvaluateDriverServiceRequest{
 			DriverId:      234,
@@ -135,6 +161,18 @@ func TestEvaluateDeliverySpeed(t *testing.T) {
 		req := &grpcapi.EvaluateDeliverySpeedRequest{
 			DriverId:      -6,
 			DeliverySpeed: grpcapi.Rating_RATING_FAIR,
+		}
+
+		_, err := client.EvaluateDeliverySpeed(ctx, req)
+		if err == nil {
+			t.Fatalf("Expected error 'incorrect driver id' but got no error")
+		}
+	})
+
+	t.Run("incorrect rating", func(t *testing.T) {
+		req := &grpcapi.EvaluateDeliverySpeedRequest{
+			DriverId:      6,
+			DeliverySpeed: grpcapi.Rating_RATING_UNSPECIFIED,
 		}
 
 		_, err := client.EvaluateDeliverySpeed(ctx, req)

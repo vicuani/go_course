@@ -10,9 +10,9 @@ import (
 )
 
 type Review struct {
-	CargoState    []grpcapi.Rating
-	DriverService []grpcapi.Rating
-	DeliverySpeed []grpcapi.Rating
+	CargoStates    []grpcapi.Rating
+	DriverServices []grpcapi.Rating
+	DeliverySpeeds []grpcapi.Rating
 }
 
 type server struct {
@@ -27,60 +27,72 @@ func newServer() *server {
 }
 
 func (s *server) EvaluateCargoState(ctx context.Context, req *grpcapi.EvaluateCargoStateRequest) (*grpcapi.EvaluateCargoStateResponse, error) {
+	if req.DriverId < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid driver ID")
+	}
+
+	if req.CargoState == grpcapi.Rating_RATING_UNSPECIFIED {
+		return nil, status.Error(codes.InvalidArgument, "invalid rating")
+	}
+
 	s.reviewsMu.Lock()
 	defer s.reviewsMu.Unlock()
-
-	if req.DriverId < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid driver ID")
-	}
 
 	if s.reviews[req.DriverId] == nil {
 		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverId].CargoState = append(s.reviews[req.DriverId].CargoState, req.CargoState)
+	s.reviews[req.DriverId].CargoStates = append(s.reviews[req.DriverId].CargoStates, req.CargoState)
 
 	return &grpcapi.EvaluateCargoStateResponse{Message: "Cargo state rating added"}, nil
 }
 
 func (s *server) EvaluateDriverService(ctx context.Context, req *grpcapi.EvaluateDriverServiceRequest) (*grpcapi.EvaluateDriverServiceResponse, error) {
+	if req.DriverId < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid driver ID")
+	}
+
+	if req.DriverService == grpcapi.Rating_RATING_UNSPECIFIED {
+		return nil, status.Error(codes.InvalidArgument, "invalid rating")
+	}
+
 	s.reviewsMu.Lock()
 	defer s.reviewsMu.Unlock()
-
-	if req.DriverId < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid driver ID")
-	}
 
 	if s.reviews[req.DriverId] == nil {
 		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverId].DriverService = append(s.reviews[req.DriverId].DriverService, req.DriverService)
+	s.reviews[req.DriverId].DriverServices = append(s.reviews[req.DriverId].DriverServices, req.DriverService)
 
 	return &grpcapi.EvaluateDriverServiceResponse{Message: "Driver service rating added"}, nil
 }
 
 func (s *server) EvaluateDeliverySpeed(ctx context.Context, req *grpcapi.EvaluateDeliverySpeedRequest) (*grpcapi.EvaluateDeliverySpeedResponse, error) {
+	if req.DriverId < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid driver ID")
+	}
+
+	if req.DeliverySpeed == grpcapi.Rating_RATING_UNSPECIFIED {
+		return nil, status.Error(codes.InvalidArgument, "invalid rating")
+	}
+
 	s.reviewsMu.Lock()
 	defer s.reviewsMu.Unlock()
-
-	if req.DriverId < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid driver ID")
-	}
 
 	if s.reviews[req.DriverId] == nil {
 		s.reviews[req.DriverId] = &Review{}
 	}
-	s.reviews[req.DriverId].DeliverySpeed = append(s.reviews[req.DriverId].DeliverySpeed, req.DeliverySpeed)
+	s.reviews[req.DriverId].DeliverySpeeds = append(s.reviews[req.DriverId].DeliverySpeeds, req.DeliverySpeed)
 
 	return &grpcapi.EvaluateDeliverySpeedResponse{Message: "Delivery speed rating added"}, nil
 }
 
 func (s *server) DriverReviewsHistory(ctx context.Context, req *grpcapi.DriverReviewsHistoryRequest) (*grpcapi.DriverReviewsHistoryResponse, error) {
+	if req.DriverId < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid driver ID")
+	}
+
 	s.reviewsMu.Lock()
 	defer s.reviewsMu.Unlock()
-
-	if req.DriverId < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid driver ID")
-	}
 
 	review, ok := s.reviews[req.DriverId]
 	if !ok {
@@ -92,8 +104,8 @@ func (s *server) DriverReviewsHistory(ctx context.Context, req *grpcapi.DriverRe
 	}
 
 	return &grpcapi.DriverReviewsHistoryResponse{
-		CargoStates:    review.CargoState,
-		DriverServices: review.DriverService,
-		DeliverySpeeds: review.DeliverySpeed,
+		CargoStates:    review.CargoStates,
+		DriverServices: review.DriverServices,
+		DeliverySpeeds: review.DeliverySpeeds,
 	}, nil
 }
