@@ -8,25 +8,32 @@ import (
 	"gorm.io/gorm"
 )
 
-func connectToDatabase(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+type DBReader struct {
+	db *gorm.DB
+}
+
+func initDBReader(dbconfig string) (*DBReader, error) {
+	db, err := gorm.Open(postgres.Open(dbconfig), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
-	return db, nil
+
+	return &DBReader{
+		db: db,
+	}, nil
 }
 
-func getUsers(ctx context.Context, db *gorm.DB) ([]User, error) {
+func (dbr *DBReader) getUsers(ctx context.Context) ([]User, error) {
 	var users []User
-	if err := db.WithContext(ctx).Find(&users).Error; err != nil {
+	if err := dbr.db.WithContext(ctx).Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("failed to retrieve users: %w", err)
 	}
 	return users, nil
 }
 
-func getStatistics(ctx context.Context, db *gorm.DB) ([]Statistics, error) {
+func (dbr *DBReader) getStatistics(ctx context.Context) ([]Statistics, error) {
 	var statistics []Statistics
-	if err := db.WithContext(ctx).Find(&statistics).Error; err != nil {
+	if err := dbr.db.WithContext(ctx).Find(&statistics).Error; err != nil {
 		return nil, fmt.Errorf("failed to retrieve statistics: %w", err)
 	}
 	return statistics, nil
@@ -47,19 +54,18 @@ func displayStatistics(statistics []Statistics) {
 }
 
 func read(ctx context.Context) error {
-	dsn := "host=localhost port=5432 user=user password=password dbname=taxi sslmode=disable"
-	db, err := connectToDatabase(dsn)
+	dbr, err := initDBReader(createDBConnectionPath("taxi"))
 	if err != nil {
 		return err
 	}
 
-	users, err := getUsers(ctx, db)
+	users, err := dbr.getUsers(ctx)
 	if err != nil {
 		return err
 	}
 	displayUsers(users)
 
-	statistics, err := getStatistics(ctx, db)
+	statistics, err := dbr.getStatistics(ctx)
 	if err != nil {
 		return err
 	}

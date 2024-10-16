@@ -2,10 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
+
+func createDBConnectionPath(dbName string) string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Panic("Error loading .env file")
+	}
+
+	return fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), dbName)
+}
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

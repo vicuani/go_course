@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ func TestReadUsers(t *testing.T) {
 John,Doe,john@example.com,30,Male,Kyiv,5,Driver
 Jane,Smith,jane@example.com,25,Female,Odesa,10,Engineer`
 
-		reader := bytes.NewReader([]byte(data))
+		reader := strings.NewReader(data)
 
 		users, err := readUsers(reader)
 		require.NoError(t, err)
@@ -48,7 +48,7 @@ Jane,Smith,jane@example.com,25,Female,Odesa,10,Engineer`
 		invalidData := `first_name,last_name,email,age,gender,city,trips_count,profession
 Oleh,Liashko,radykal@tut.com,thirty,Male,Kyiv,seven,Driver`
 
-		invalidReader := bytes.NewReader([]byte(invalidData))
+		invalidReader := strings.NewReader(invalidData)
 
 		_, err := readUsers(invalidReader)
 		require.Error(t, err)
@@ -61,7 +61,7 @@ func TestReadStatistics(t *testing.T) {
 Kyiv,18-25,8
 Odesa,26-35,12`
 
-		reader := bytes.NewReader([]byte(data))
+		reader := strings.NewReader(data)
 
 		statistics, err := readStatistics(reader)
 		require.NoError(t, err)
@@ -84,7 +84,7 @@ Odesa,26-35,12`
 		invalidData := `city,age_range,average_trips
 Kyiv,18-25,eight`
 
-		invalidReader := bytes.NewReader([]byte(invalidData))
+		invalidReader := strings.NewReader(invalidData)
 
 		_, err := readStatistics(invalidReader)
 		require.Error(t, err)

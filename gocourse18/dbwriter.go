@@ -14,7 +14,7 @@ type DBWriter struct {
 }
 
 func initDBWriter(ctx context.Context, dbname string) (*DBWriter, error) {
-	db, err := sqlx.ConnectContext(ctx, "postgres", "host=localhost port=5432 user=user password=password dbname=postgres sslmode=disable")
+	db, err := sqlx.ConnectContext(ctx, "postgres", createDBConnectionPath("postgres"))
 	if err != nil {
 		return nil, fmt.Errorf("cannot connect to db: %v", err)
 	}
@@ -30,7 +30,7 @@ func initDBWriter(ctx context.Context, dbname string) (*DBWriter, error) {
 			return nil, err
 		}
 
-		dbw.db, err = sqlx.ConnectContext(ctx, "postgres", fmt.Sprintf("host=localhost port=5432 user=user password=password dbname=%s sslmode=disable", dbname))
+		dbw.db, err = sqlx.ConnectContext(ctx, "postgres", createDBConnectionPath(dbname))
 		if err != nil {
 			return nil, fmt.Errorf("cannot connect to db: %v", err)
 		}
@@ -40,8 +40,7 @@ func initDBWriter(ctx context.Context, dbname string) (*DBWriter, error) {
 }
 
 func (w *DBWriter) createDatabaseIfNotExists(ctx context.Context, dbName string) error {
-	var existingDBName string
-	err := w.db.QueryRowContext(ctx, "SELECT datname FROM pg_database WHERE datname = $1", dbName).Scan(&existingDBName)
+	err := w.db.QueryRowContext(ctx, "SELECT datname FROM pg_database WHERE datname = $1", dbName).Err()
 
 	if err == sql.ErrNoRows {
 		_, err = w.db.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", dbName))

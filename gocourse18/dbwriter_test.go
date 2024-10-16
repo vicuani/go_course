@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const dbtestname = "test_db"
 
 func TestCreateDatabaseIfNotExists(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -17,20 +20,20 @@ func TestCreateDatabaseIfNotExists(t *testing.T) {
 	require.NoError(t, err)
 	defer dbw.db.Close()
 
-	err = dbw.createDatabaseIfNotExists(ctx, "test_db")
+	err = dbw.createDatabaseIfNotExists(ctx, dbtestname)
 	require.NoError(t, err)
 
 	var dbName string
-	err = dbw.db.QueryRow("SELECT datname FROM pg_database WHERE datname = 'test_db'").Scan(&dbName)
-	assert.NoError(t, err)
-	assert.Equal(t, "test_db", dbName)
+	err = dbw.db.QueryRow(fmt.Sprintf("SELECT datname FROM pg_database WHERE datname = '%v'", dbtestname)).Scan(&dbName)
+	require.NoError(t, err)
+	assert.Equal(t, dbtestname, dbName)
 }
 
 func TestCreateTables(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	dbw, err := initDBWriter(ctx, "test_db")
+	dbw, err := initDBWriter(ctx, dbtestname)
 	require.NoError(t, err)
 	defer dbw.db.Close()
 
@@ -51,7 +54,7 @@ func TestInsertUsers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	dbw, err := initDBWriter(ctx, "test_db")
+	dbw, err := initDBWriter(ctx, dbtestname)
 	require.NoError(t, err)
 
 	defer dbw.db.Close()
@@ -63,11 +66,11 @@ func TestInsertUsers(t *testing.T) {
 	}
 
 	err = dbw.insertUsers(ctx, users)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var count int
 	err = dbw.db.Get(&count, "SELECT COUNT(*) FROM users")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, len(users), count)
 }
 
@@ -75,7 +78,7 @@ func TestInsertStatistics(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	dbw, err := initDBWriter(ctx, "test_db")
+	dbw, err := initDBWriter(ctx, dbtestname)
 	require.NoError(t, err)
 
 	defer dbw.db.Close()
@@ -87,10 +90,10 @@ func TestInsertStatistics(t *testing.T) {
 	}
 
 	err = dbw.insertStatistics(ctx, statistics)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var count int
 	err = dbw.db.Get(&count, "SELECT COUNT(*) FROM statistics")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, len(statistics), count)
 }
