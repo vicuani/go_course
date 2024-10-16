@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -24,7 +23,8 @@ func TestCreateDatabaseIfNotExists(t *testing.T) {
 	require.NoError(t, err)
 
 	var dbName string
-	err = dbw.db.QueryRow(fmt.Sprintf("SELECT datname FROM pg_database WHERE datname = '%v'", dbtestname)).Scan(&dbName)
+	err = dbw.db.QueryRowContext(ctx, "SELECT datname FROM pg_database WHERE datname = $1", dbtestname).Scan(&dbName)
+
 	require.NoError(t, err)
 	assert.Equal(t, dbtestname, dbName)
 }
