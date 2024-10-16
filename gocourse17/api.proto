@@ -1,0 +1,61 @@
+// Use protoc --go_out=./internal/grpc/grpcapi --go_opt=paths=source_relative --go-grpc_out=./internal/grpc/grpcapi --go-grpc_opt=paths=source_relative api.proto
+// to regenerate code
+
+syntax = "proto3";
+
+package taxi;
+
+option go_package = "github.com/vicuani/go_course/gocourse17/grpcapi";
+
+service TaxiService {
+    rpc EvaluateCargoState(EvaluateCargoStateRequest) returns (EvaluateCargoStateResponse);
+    rpc EvaluateDriverService(EvaluateDriverServiceRequest) returns (EvaluateDriverServiceResponse);
+    rpc EvaluateDeliverySpeed(EvaluateDeliverySpeedRequest) returns (EvaluateDeliverySpeedResponse);
+    rpc DriverReviewsHistory(DriverReviewsHistoryRequest) returns (DriverReviewsHistoryResponse);
+}
+
+enum Rating {
+    RATING_UNSPECIFIED = 0;
+    RATING_POOR = 1;
+    RATING_FAIR = 2;
+    RATING_GOOD = 3;
+    RATING_GREAT = 4;
+    RATING_EXCELLENT = 5;
+}
+
+message EvaluateCargoStateRequest {
+    int32 driver_id = 1;
+    Rating cargo_state = 2;
+}
+
+message EvaluateDriverServiceRequest {
+    int32 driver_id = 1;
+    Rating driver_service = 2;
+}
+
+message EvaluateDeliverySpeedRequest {
+    int32 driver_id = 1;
+    Rating delivery_speed = 2;
+}
+
+message EvaluateCargoStateResponse {
+    string message = 1;
+}
+
+message EvaluateDriverServiceResponse {
+    string message = 1;
+}
+
+message EvaluateDeliverySpeedResponse {
+    string message = 1;
+}
+
+message DriverReviewsHistoryRequest {
+    int32 driver_id = 1;
+}
+
+message DriverReviewsHistoryResponse {
+    repeated Rating cargo_states = 1;
+    repeated Rating driver_services = 2;
+    repeated Rating delivery_speeds = 3;
+}
