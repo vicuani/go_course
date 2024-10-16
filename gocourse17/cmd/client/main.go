@@ -25,8 +25,7 @@ func (t *TaxiServiceClient) sendCargoStateRating(driverID int32, cargoState grpc
 
 	res, err := t.client.EvaluateCargoState(ctx, req)
 	if err != nil {
-		cancel()
-		log.Fatalf("could not submit cargo state rating: %v", err)
+		log.Panicf("could not submit cargo state rating: %v", err)
 	}
 
 	log.Printf("Response from server: %s\n", res.Message)
@@ -43,8 +42,7 @@ func (t *TaxiServiceClient) sendDriverServiceRating(driverID int32, driverServic
 
 	res, err := t.client.EvaluateDriverService(ctx, req)
 	if err != nil {
-		cancel()
-		log.Fatalf("could not submit driver service rating: %v", err)
+		log.Panicf("could not submit driver service rating: %v", err)
 	}
 
 	log.Printf("Response from server: %s\n", res.Message)
@@ -61,15 +59,14 @@ func (t *TaxiServiceClient) sendDeliverySpeedRating(driverID int32, deliverySpee
 
 	res, err := t.client.EvaluateDeliverySpeed(ctx, req)
 	if err != nil {
-		cancel()
-		log.Fatalf("could not submit delivery speed rating: %v", err)
+		log.Panicf("could not submit delivery speed rating: %v", err)
 	}
 
 	log.Printf("Response from server: %s\n", res.Message)
 }
 
-func (t *TaxiServiceClient) getDriverReviews(driverID int32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+func (t *TaxiServiceClient) getDriverReviews(ctx context.Context, driverID int32) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
 	req := &grpcapi.DriverReviewsHistoryRequest{
@@ -78,8 +75,7 @@ func (t *TaxiServiceClient) getDriverReviews(driverID int32) {
 
 	res, err := t.client.DriverReviewsHistory(ctx, req)
 	if err != nil {
-		cancel()
-		log.Fatalf("could not get driver reviews: %v", err)
+		log.Panicf("could not get driver reviews: %v", err)
 	}
 
 	log.Printf("\nCargo states ratings for driver: %v\n", driverID)
@@ -108,20 +104,20 @@ func main() {
 
 	client := grpcapi.NewTaxiServiceClient(conn)
 	driverID := int32(567)
-	serviceClient := TaxiServiceClient{client: client}
+	taxiClient := TaxiServiceClient{client: client}
 
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GREAT)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GOOD)
-	serviceClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	taxiClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	taxiClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GREAT)
+	taxiClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	taxiClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_GOOD)
+	taxiClient.sendCargoStateRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
 
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GOOD)
-	serviceClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GREAT)
+	taxiClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GOOD)
+	taxiClient.sendDriverServiceRating(driverID, grpcapi.Rating_RATING_GREAT)
 
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
-	serviceClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_GREAT)
+	taxiClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	taxiClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_EXCELLENT)
+	taxiClient.sendDeliverySpeedRating(driverID, grpcapi.Rating_RATING_GREAT)
 
-	serviceClient.getDriverReviews(driverID)
+	taxiClient.getDriverReviews(driverID)
 }
